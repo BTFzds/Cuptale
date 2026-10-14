@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Recipe {
+  id          String   @id @default(cuid())
+  name        String
+  imageUrl    String?
+  ingredients String   @default("[]")
+  steps       String   @default("")
+  notes       String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  drinks      Drink[]
+}
+
+model Drink {
+  id          String   @id @default(cuid())
+  name        String
+  imageUrl    String?
+  flavorText  String   @default("")
+  category       String   @default("经典")
+  tagline        String   @default("")
+  sweetness      Int      @default(3)
+  acidity        Int      @default(3)
+  strength       Int      @default(3)
+  abvApprox      Float?
+  glassType      String   @default("岩石杯")
+  isNonAlcoholic Boolean  @default(false)
+  hasDairy       Boolean  @default(false)
+  hasCaffeine    Boolean  @default(false)
+  allergens   String   @default("")
+  isPublished Boolean  @default(false)
+  isAvailable Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  recipeId    String?
+  recipe      Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      Order[]
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  nickname    String
+  drinkId     String
+  drink       Drink    @relation(fields: [drinkId], references: [id], onDelete: Cascade)
+  quantity    Int      @default(1)
+  note        String   @default("")
+  status      String   @default("pending")
+  publicToken String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([publicToken])
+  @@index([status])
+  @@index([createdAt])
+}

@@ -1,8 +1,5 @@
-import { redirect } from "next/navigation";
-import { isAdminAuthenticated } from "@/lib/auth";
+/** Admin pages are open (no password). */
 
 export async function requireAdminPage() {
-  if (!(await isAdminAuthenticated())) {
-    redirect("/admin/login");
-  }
+  // no redirect
 }

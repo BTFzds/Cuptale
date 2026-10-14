@@ -1,37 +1,75 @@
+import Image from "next/image";
+import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
-import { DrinkCard } from "@/components/drink-card";
 import { GuestNav } from "@/components/guest-nav";
-import { toPublicDrink } from "@/lib/dto";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const drinks = await prisma.drink.findMany({
+  const featured = await prisma.drink.findMany({
     where: { isPublished: true },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    take: 2,
   });
 
   return (
     <main className="shell">
-      <header className="mb-8">
-        <BrandLogo />
-        <p className="mt-4 text-center text-sm leading-relaxed text-ink-soft">
-          杯叙 CupTale · 深夜居家调酒
-          <br />
-          选一杯，慢慢等就好
-        </p>
+      <header className="px-6 pb-2 pt-12 text-center">
+        <BrandLogo size={112} />
       </header>
 
-      <section className="space-y-4">
-        {drinks.length === 0 ? (
-          <div className="card-surface px-5 py-10 text-center text-sm text-ink-mute">
-            菜单准备中，稍后再来看看。
+      <section className="mt-8 grid grid-cols-2 gap-3 px-5">
+        <Link href="/order" className="btn-outline py-4 text-[15px]">
+          点单
+        </Link>
+        <Link href="/my-orders" className="btn-primary py-4 text-[15px]">
+          我的订单
+        </Link>
+      </section>
+
+      <section className="mt-8 px-5">
+        <div className="mb-3 flex items-end justify-between">
+          <h2 className="text-[15px] font-semibold">推荐</h2>
+          <Link href="/order" className="text-xs text-ink-mute">
+            全部
+          </Link>
+        </div>
+
+        {featured.length === 0 ? (
+          <div className="border border-[#f0f0f0] px-4 py-10 text-center text-sm text-ink-mute">
+            暂无酒品
           </div>
         ) : (
-          drinks.map((drink, index) => (
-            <DrinkCard key={drink.id} drink={toPublicDrink(drink)} index={index} />
-          ))
+          <div className="space-y-3">
+            {featured.map((drink) => (
+              <Link
+                key={drink.id}
+                href={`/drinks/${drink.id}`}
+                className={`flex gap-3 border border-[#f0f0f0] p-3 ${
+                  drink.isAvailable ? "" : "opacity-45 grayscale"
+                }`}
+              >
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden bg-sand">
+                  {drink.imageUrl ? (
+                    <Image
+                      src={drink.imageUrl}
+                      alt={drink.name}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  ) : null}
+                </div>
+                <div className="min-w-0 flex-1 py-0.5">
+                  <p className="truncate text-[15px] font-medium">{drink.name}</p>
+                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-ink-mute">
+                    {drink.tagline || drink.flavorText}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
         )}
       </section>
 

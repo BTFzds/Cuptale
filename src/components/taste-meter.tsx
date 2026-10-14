@@ -13,9 +13,7 @@ export function TasteMeter({
         {Array.from({ length: 5 }).map((_, i) => (
           <span
             key={i}
-            className={`h-2 w-5 rounded-full ${
-              i < level ? "bg-clay" : "bg-sand-deep"
-            }`}
+            className={`h-1.5 w-5 ${i < level ? "bg-ink" : "bg-[#e8e8e8]"}`}
           />
         ))}
       </div>

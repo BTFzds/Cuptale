@@ -10,17 +10,16 @@ export function BrandLogo({
   return (
     <div className="flex flex-col items-center text-center">
       <Image
-        src="/brand/offsip-logo.jpg"
-        alt="息盏 OffSip"
+        src="/brand/offsip-mark.png"
+        alt="息盏"
         width={size}
         height={size}
-        className="rounded-full object-cover"
+        className="object-contain"
         priority
       />
       {showWordmark ? (
         <div className="mt-3">
           <p className="font-display text-2xl tracking-wide text-ink">息盏</p>
-          <p className="mt-0.5 text-xs tracking-[0.35em] text-ink-mute">OFFSIP</p>
         </div>
       ) : null}
     </div>

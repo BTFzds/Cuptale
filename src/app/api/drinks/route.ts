@@ -2,19 +2,21 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { toAdminDrink, toPublicDrink } from "@/lib/dto";
-import { handleRouteError, jsonError, jsonOk } from "@/lib/http";
+import { handleRouteError, jsonOk } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthenticated } from "@/lib/auth";
 
 const drinkBodySchema = z.object({
   name: z.string().min(1, "请填写酒名"),
   imageUrl: z.string().optional().nullable(),
   flavorText: z.string().optional().default(""),
+  category: z.string().optional().default("经典"),
+  tagline: z.string().optional().default(""),
   sweetness: z.number().int().min(1).max(5).optional().default(3),
   acidity: z.number().int().min(1).max(5).optional().default(3),
   strength: z.number().int().min(1).max(5).optional().default(3),
   abvApprox: z.number().min(0).max(100).optional().nullable(),
   glassType: z.string().optional().default("岩石杯"),
+  isNonAlcoholic: z.boolean().optional().default(false),
   hasDairy: z.boolean().optional().default(false),
   hasCaffeine: z.boolean().optional().default(false),
   allergens: z.string().optional().default(""),
@@ -26,10 +28,9 @@ const drinkBodySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await isAdminAuthenticated();
     const scope = request.nextUrl.searchParams.get("scope");
 
-    if (admin && scope === "admin") {
+    if (scope === "admin") {
       const drinks = await prisma.drink.findMany({
         include: { recipe: true },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
@@ -56,11 +57,14 @@ export async function POST(request: NextRequest) {
         name: body.name,
         imageUrl: body.imageUrl || null,
         flavorText: body.flavorText,
+        category: body.category,
+        tagline: body.tagline,
         sweetness: body.sweetness,
         acidity: body.acidity,
         strength: body.strength,
         abvApprox: body.abvApprox ?? null,
         glassType: body.glassType,
+        isNonAlcoholic: body.isNonAlcoholic,
         hasDairy: body.hasDairy,
         hasCaffeine: body.hasCaffeine,
         allergens: body.allergens,

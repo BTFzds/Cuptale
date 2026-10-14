@@ -1,18 +1,14 @@
-import { Suspense } from "react";
-import { GuestNav } from "@/components/guest-nav";
-import { OrderClient } from "./order-client";
+import { MenuClient } from "./menu-client";
+import { toPublicDrink } from "@/lib/dto";
+import { prisma } from "@/lib/prisma";
 
-export default function OrderPage() {
-  return (
-    <Suspense
-      fallback={
-        <main className="shell">
-          <p className="text-sm text-ink-mute">加载点单页…</p>
-          <GuestNav />
-        </main>
-      }
-    >
-      <OrderClient />
-    </Suspense>
-  );
+export const dynamic = "force-dynamic";
+
+export default async function OrderPage() {
+  const drinks = await prisma.drink.findMany({
+    where: { isPublished: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+  });
+
+  return <MenuClient drinks={drinks.map(toPublicDrink)} />;
 }

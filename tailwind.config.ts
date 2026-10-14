@@ -10,26 +10,23 @@ const config: Config = {
     extend: {
       colors: {
         ink: {
-          DEFAULT: "#3A3732",
-          soft: "#5C574F",
-          mute: "#8A847A",
+          DEFAULT: "#1a1a1a",
+          soft: "#666666",
+          mute: "#999999",
         },
         sand: {
-          DEFAULT: "#F3EEE6",
-          deep: "#E7E0D4",
-          card: "#FAF7F2",
+          DEFAULT: "#f7f5f2",
+          deep: "#ebe7e1",
+          card: "#ffffff",
         },
         clay: {
-          DEFAULT: "#A89880",
-          soft: "#C4B6A0",
+          DEFAULT: "#a89880",
+          soft: "#c4b6a0",
         },
       },
       fontFamily: {
         display: ["var(--font-display)", "Songti SC", "serif"],
         sans: ["var(--font-sans)", "PingFang SC", "Microsoft YaHei", "sans-serif"],
-      },
-      boxShadow: {
-        soft: "0 8px 30px rgba(58, 55, 50, 0.06)",
       },
     },
   },

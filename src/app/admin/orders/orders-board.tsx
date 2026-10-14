@@ -55,13 +55,20 @@ export function OrdersBoard() {
     if (res.ok) load();
   }
 
+  async function deleteOrder(id: string) {
+    if (!confirm("删除该订单？")) return;
+    const res = await fetch(`/api/orders/${id}`, { method: "DELETE" });
+    if (res.ok) load();
+    else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "删除失败");
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl text-ink">订单看板</h1>
-          <p className="text-sm text-ink-soft">约 10 秒自动刷新</p>
-        </div>
+        <h1 className="text-2xl font-semibold">订单</h1>
         <button
           className="btn-ghost"
           onClick={() => {
@@ -69,23 +76,23 @@ export function OrdersBoard() {
             load();
           }}
         >
-          手动刷新
+          刷新
         </button>
       </div>
 
-      <section className="card-surface p-4">
-        <h2 className="mb-3 text-sm font-medium text-ink">未完成汇总（备料）</h2>
+      <section className="border border-[#f0f0f0] p-4">
+        <h2 className="mb-3 text-sm font-medium">未完成汇总</h2>
         {summary.length === 0 ? (
-          <p className="text-sm text-ink-mute">暂无待做饮品</p>
+          <p className="text-sm text-ink-mute">暂无</p>
         ) : (
           <ul className="space-y-2">
             {summary.map((row) => (
               <li
                 key={row.drinkId}
-                className="flex items-center justify-between rounded-2xl bg-sand px-3 py-2 text-sm"
+                className="flex items-center justify-between bg-sand px-3 py-2 text-sm"
               >
                 <span>{row.name}</span>
-                <span className="font-medium text-ink">× {row.quantity}</span>
+                <span className="font-medium">× {row.quantity}</span>
               </li>
             ))}
           </ul>
@@ -93,14 +100,14 @@ export function OrdersBoard() {
       </section>
 
       {loading ? <p className="text-sm text-ink-mute">加载中…</p> : null}
-      {error ? <p className="text-sm text-red-700/80">{error}</p> : null}
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       <div className="space-y-3">
         {orders.map((order) => (
-          <article key={order.id} className="card-surface p-4">
+          <article key={order.id} className="border border-[#f0f0f0] p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h3 className="font-display text-lg text-ink">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-medium">
                   {order.drinkName} × {order.quantity}
                 </h3>
                 <p className="mt-1 text-sm text-ink-soft">{order.nickname}</p>
@@ -111,19 +118,28 @@ export function OrdersBoard() {
                   {new Date(order.createdAt).toLocaleString("zh-CN")}
                 </p>
               </div>
-              <select
-                className="field w-auto"
-                value={order.status}
-                onChange={(e) =>
-                  updateStatus(order.id, e.target.value as OrderStatus)
-                }
-              >
-                {ORDER_STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {STATUS_LABEL[status]}
-                  </option>
-                ))}
-              </select>
+              <div className="flex flex-col items-end gap-2">
+                <select
+                  className="field w-auto"
+                  value={order.status}
+                  onChange={(e) =>
+                    updateStatus(order.id, e.target.value as OrderStatus)
+                  }
+                >
+                  {ORDER_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {STATUS_LABEL[status]}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn-ghost px-3 py-1.5 text-xs text-red-700"
+                  onClick={() => deleteOrder(order.id)}
+                >
+                  删除
+                </button>
+              </div>
             </div>
           </article>
         ))}

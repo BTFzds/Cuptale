@@ -15,8 +15,15 @@ const display = Noto_Serif_SC({
 });
 
 export const metadata: Metadata = {
-  title: "杯叙 CupTale · 息盏 OffSip",
-  description: "家庭私人调酒点单 · 息盏 OffSip",
+  title: "杯叙",
+  description: "息盏 OffSip",
+  icons: {
+    icon: [
+      { url: "/brand/offsip-mark.svg", type: "image/svg+xml" },
+      { url: "/brand/offsip-mark.png", type: "image/png" },
+    ],
+    apple: [{ url: "/brand/offsip-mark.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({

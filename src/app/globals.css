@@ -3,11 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --bg: #f3eee6;
-  --ink: #3a3732;
-  --ink-soft: #5c574f;
-  --sand-deep: #e7e0d4;
-  --clay: #a89880;
+  --ink: #1a1a1a;
+  --ink-soft: #666666;
+  --ink-mute: #999999;
+  --line: #ececec;
+  --bg: #ffffff;
+  --sand: #f7f5f2;
+  --accent: #1a1a1a;
 }
 
 html {
@@ -16,31 +18,33 @@ html {
 
 body {
   color: var(--ink);
-  background:
-    radial-gradient(1200px 600px at 10% -10%, #fff9f1 0%, transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, #ebe4d8 0%, transparent 50%),
-    var(--bg);
+  background: var(--bg);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 @layer components {
   .shell {
-    @apply mx-auto w-full max-w-md px-4 pb-28 pt-5;
+    @apply mx-auto w-full max-w-md min-h-screen bg-white pb-24;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-2xl bg-ink px-5 py-3 text-sm font-medium text-sand transition hover:bg-ink-soft active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex items-center justify-center rounded-sm bg-ink px-5 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center rounded-sm border border-ink bg-white px-5 py-3 text-sm font-medium text-ink transition active:scale-[0.98];
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-2xl border border-sand-deep bg-sand-card/70 px-4 py-2.5 text-sm text-ink-soft transition hover:bg-white active:scale-[0.98];
+    @apply inline-flex items-center justify-center rounded-sm border border-[#ececec] bg-white px-4 py-2.5 text-sm text-ink-soft transition active:scale-[0.98];
   }
 
   .field {
-    @apply w-full rounded-2xl border border-sand-deep bg-white/70 px-4 py-3 text-sm outline-none ring-clay/30 transition focus:ring-2;
+    @apply w-full rounded-sm border border-[#e8e8e8] bg-white px-3.5 py-3 text-sm outline-none transition focus:border-ink;
   }
 
-  .card-surface {
-    @apply rounded-3xl border border-sand-deep/80 bg-sand-card/90 shadow-soft backdrop-blur;
+  .tag {
+    @apply inline-flex items-center rounded-sm border border-[#e5e5e5] px-1.5 py-0.5 text-[10px] text-ink-soft;
   }
 }

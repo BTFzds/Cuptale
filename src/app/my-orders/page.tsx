@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { GuestNav } from "@/components/guest-nav";
 import { STATUS_LABEL, type OrderStatus } from "@/lib/constants";
 import { getStoredOrderTokens } from "@/lib/order-tokens";
@@ -48,49 +49,60 @@ export default function MyOrdersPage() {
 
   return (
     <main className="shell">
-      <header className="mb-6 flex items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl text-ink">我的订单</h1>
-          <p className="mt-1 text-sm text-ink-soft">仅显示本机下过的单</p>
-        </div>
-        <button className="btn-ghost" onClick={() => { setLoading(true); load(); }}>
+      <header className="flex items-center justify-between px-5 pb-2 pt-8">
+        <h1 className="text-2xl font-semibold">我的</h1>
+        <button
+          type="button"
+          className="text-xs text-ink-mute"
+          onClick={() => {
+            setLoading(true);
+            load();
+          }}
+        >
           刷新
         </button>
       </header>
 
-      {loading ? (
-        <p className="text-sm text-ink-mute">加载中…</p>
-      ) : error ? (
-        <p className="text-sm text-red-700/80">{error}</p>
-      ) : orders.length === 0 ? (
-        <div className="card-surface px-5 py-10 text-center text-sm text-ink-mute">
-          还没有订单。去菜单挑一杯吧。
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {orders.map((order) => (
-            <article key={order.id} className="card-surface p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="font-display text-lg text-ink">
-                    {order.drinkName} × {order.quantity}
-                  </h2>
-                  <p className="mt-1 text-sm text-ink-soft">{order.nickname}</p>
+      <section className="mt-6 px-5">
+        <h2 className="mb-3 text-[15px] font-semibold">订单</h2>
+
+        {loading ? (
+          <p className="py-8 text-center text-sm text-ink-mute">加载中…</p>
+        ) : error ? (
+          <p className="text-sm text-red-600">{error}</p>
+        ) : orders.length === 0 ? (
+          <div className="border border-[#f0f0f0] px-4 py-10 text-center">
+            <p className="text-sm text-ink-mute">暂无订单</p>
+            <Link href="/order" className="btn-primary mt-4 inline-flex">
+              去点单
+            </Link>
+          </div>
+        ) : (
+          <div className="divide-y divide-[#f0f0f0] border border-[#f0f0f0]">
+            {orders.map((order) => (
+              <article key={order.id} className="px-4 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-[15px] font-medium">
+                      {order.drinkName} × {order.quantity}
+                    </h3>
+                    <p className="mt-1 text-xs text-ink-mute">{order.nickname}</p>
+                  </div>
+                  <span className="text-xs font-medium text-ink">
+                    {STATUS_LABEL[order.status] || order.status}
+                  </span>
                 </div>
-                <span className="rounded-full bg-sand px-3 py-1 text-xs text-ink-soft">
-                  {STATUS_LABEL[order.status] || order.status}
-                </span>
-              </div>
-              {order.note ? (
-                <p className="mt-3 text-sm text-ink-mute">备注：{order.note}</p>
-              ) : null}
-              <p className="mt-2 text-xs text-ink-mute">
-                {new Date(order.createdAt).toLocaleString("zh-CN")}
-              </p>
-            </article>
-          ))}
-        </div>
-      )}
+                {order.note ? (
+                  <p className="mt-2 text-xs text-ink-soft">备注：{order.note}</p>
+                ) : null}
+                <p className="mt-2 text-[11px] text-ink-mute">
+                  {new Date(order.createdAt).toLocaleString("zh-CN")}
+                </p>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <GuestNav />
     </main>

@@ -8,6 +8,8 @@ export function toPublicDrink(drink: Drink) {
     name: drink.name,
     imageUrl: drink.imageUrl,
     flavorText: drink.flavorText,
+    category: drink.category,
+    tagline: drink.tagline,
     sweetness: drink.sweetness,
     acidity: drink.acidity,
     strength: drink.strength,
@@ -16,6 +18,7 @@ export function toPublicDrink(drink: Drink) {
     hasDairy: drink.hasDairy,
     hasCaffeine: drink.hasCaffeine,
     allergens: drink.allergens,
+    isNonAlcoholic: drink.isNonAlcoholic,
     isAvailable: drink.isAvailable,
   };
 }

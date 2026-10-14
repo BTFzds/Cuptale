@@ -18,18 +18,23 @@ alwaysApply: true
 
 - **Guest never sees recipes**: ingredients, ml, steps, recipe notes must not appear in public pages or public API JSON.
 - Drink public DTO may include: name, image, flavorText, taste tags (sweetness/acidity/strength/abv/glass/dairy/caffeine/allergens), availability flags.
-- Admin lives under `/admin`; do **not** link it from guest navigation.
+- Admin lives under `/admin` with **no password** (open gate); do **not** link it from guest navigation.
+- Guest public APIs must never return recipes; use `?admin=1` / `scope=admin` only for admin UI fetches.
 - Drink (menu) and Recipe (private notebook) are separate; a drink may publish without a recipe.
 - Unavailable drinks: greyed out, not hidden; not orderable.
 - Guest can track **only their own** orders via `publicToken` stored locally.
 
 ## UX / brand
 
-- Mobile-first, 茶颜悦色-like order flow: browse → detail → cart/order → success → my orders.
-- Palette: soft charcoal ink + sand beige; calm late-night home bar mood.
+- Mobile-first; guest IA like 喜茶: 首页 / 点单 / 我的; order page uses left category + right list.
+- Visual: clean white, black accents, generous whitespace (HEYTEA-like), still OffSip late-night calm.
+- Flow: home → order menu → drink detail → submit → my orders.
 - Brand mark: OffSip moon + rocks-glass logo in `public/brand/`.
-- Chinese UI copy; quiet micro-interactions (Framer Motion), not noisy.
-- Prefer expressive but light pages; avoid purple/glow/dashboard clutter on guest surfaces.
+- Chinese UI copy: short and plain; avoid marketing fluff / “AI 文案感”.
+- Quiet micro-interactions; avoid purple/glow/dashboard clutter on guest surfaces.
+- Brand mark (pure logo): `public/brand/offsip-mark.png` + `.svg`; full poster art may stay as `offsip-logo.jpg`.
+- Local drink uploads go to `/public/uploads` (gitignored) — they do **not** appear on Vercel after git push. Production needs Vercel Blob (`BLOB_READ_WRITE_TOKEN`) or re-upload via live `/admin`.
+- When opening local preview browsers: **only 2 windows** — guest `/` and admin `/admin/orders` (iPhone 16 Pro Max size).
 
 ## Code style
 

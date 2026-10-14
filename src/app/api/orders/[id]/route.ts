@@ -27,3 +27,16 @@ export async function PATCH(
     return handleRouteError(error);
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  try {
+    await requireAdmin();
+    await prisma.order.delete({ where: { id: params.id } });
+    return jsonOk({ ok: true });
+  } catch (error) {
+    return handleRouteError(error);
+  }
+}
