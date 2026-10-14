@@ -51,4 +51,6 @@ alwaysApply: true
 
 - Target Vercel; Framework Preset = Next.js.
 - Required env: `DATABASE_URL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `DEEPSEEK_API_KEY`.
+- DB: Prisma Postgres (or Neon). When connecting integration, Custom Prefix must be `DATABASE` so the var is `DATABASE_URL` (not `STORAGE_URL`).
 - Keep `awesome-cursorrules-main/` local-only (gitignored) as a prompt library.
+- Deploy fill-in checklist lives in `DEPLOY.md` (Prisma Postgres wizard steps).
