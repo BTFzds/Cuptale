@@ -10,8 +10,7 @@ alwaysApply: true
 ## Stack
 
 - Next.js App Router, TypeScript, Tailwind CSS, Framer Motion
-- Prisma: SQLite locally (`file:./dev.db`); Neon Postgres on Vercel (change `provider` to `postgresql`)
-- Images via Vercel Blob (local fallback `/public/uploads`)
+- Prisma + Neon Postgres (`DATABASE_URL`); images via Vercel Blob (local fallback `/public/uploads`)
 - DeepSeek OpenAI-compatible API (`base_url` + `deepseek-flash`) — **server-only**
 - Zod for request validation; jose for admin session cookie
 

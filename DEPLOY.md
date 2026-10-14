@@ -1,50 +1,50 @@
-# Vercel 部署清单（CupTale）
+# Vercel 部署（修复部署失败）
 
-## 推送代码
+## 失败原因（你这次的报错）
 
-```bash
-git remote add origin git@github.com:BTFzds/Cuptale.git
-git add .
-git commit -m "feat: initial CupTale app"
-git push -u origin main
-```
+1. **Application Preset 选成了 Other** → 请改成 **Next.js**
+2. 仓库原先本地用 **SQLite 文件库**，Vercel 无持久磁盘，构建里的 `prisma db push` 会失败
+3. Vercel 上通常还没配 **`DATABASE_URL`**（Neon 连接串）
 
-（勿提交 `.env`；DeepSeek Key 若曾泄露请先轮换。）
+现已改为 **PostgreSQL（Neon）**。
 
-## Vercel 项目设置
+## 按这个顺序操作
 
-1. Import `BTFzds/Cuptale`，Framework Preset = **Next.js**
-2. Build Command 使用仓库内 `vercel.json`（已含 `prisma db push`）
-3. 环境变量：
+### 1. 在 Vercel 创建 Neon 数据库
 
-| Name | 说明 |
-|------|------|
-| `DATABASE_URL` | Neon Postgres 连接串 |
-| `ADMIN_PASSWORD` | 后台密码 |
-| `ADMIN_SESSION_SECRET` | 长随机串 |
-| `DEEPSEEK_API_KEY` | DeepSeek Key |
+1. 打开 [Vercel Dashboard](https://vercel.com/dashboard) → 你的项目（或先 Import）
+2. **Storage** → **Create Database** → 选 **Neon** → 创建
+3. 创建后会自动（或手动）把 `DATABASE_URL` / `POSTGRES_URL` 接到项目  
+   - 若变量名是 `POSTGRES_PRISMA_URL` 或 `POSTGRES_URL`，请再加一条：  
+     **Name:** `DATABASE_URL`  
+     **Value:** 复制同一条 Postgres 连接串（带 `sslmode=require`）
+
+### 2. 补齐环境变量（Settings → Environment Variables）
+
+| Name | 示例 / 说明 |
+|------|-------------|
+| `DATABASE_URL` | Neon 连接串（必须） |
+| `ADMIN_PASSWORD` | 后台密码，如 `offsip-home` |
+| `ADMIN_SESSION_SECRET` | 一长串随机字符 |
+| `DEEPSEEK_API_KEY` | 你的 DeepSeek Key |
 | `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` |
 | `DEEPSEEK_MODEL` | `deepseek-flash` |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob（生产强烈建议） |
+| `BLOB_READ_WRITE_TOKEN` | 可选；Storage → Blob 创建后填 |
 
-## 数据库：Neon（必做）
+Environment 勾选 Production / Preview。
 
-本地开发用 SQLite。**上线前**把 [`prisma/schema.prisma`](prisma/schema.prisma) 中：
+### 3. Import / Redeploy 设置
 
-```prisma
-provider = "sqlite"
+- **Framework Preset:** `Next.js`（不要选 Other）
+- Root Directory: `./`
+- 保存后 **Redeploy**
+
+### 4. 本地开发也改用同一条 Neon
+
+把 Neon 的 `DATABASE_URL` 写进本地 `.env`（替换原来的 `file:./dev.db`），然后：
+
+```bash
+npx prisma db push
+npm run db:seed
+npm run dev
 ```
-
-改为：
-
-```prisma
-provider = "postgresql"
-```
-
-然后在 Neon / Vercel Storage 创建数据库，把连接串写入 `DATABASE_URL`，再 Deploy。
-
-## 后台入口
-
-生产域名下访问 `/admin`（访客导航不露出此链接）。
-
-默认本地密码：`.env` 里的 `ADMIN_PASSWORD`（示例 `offsip-home`）。

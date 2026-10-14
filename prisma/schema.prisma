@@ -2,10 +2,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Local default: SQLite. For Vercel + Neon, change provider to "postgresql"
-// and set DATABASE_URL to your Neon connection string (see README).
+// Production + Vercel: Neon Postgres
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

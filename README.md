@@ -4,6 +4,10 @@
 
 ## 本地启动
 
+1. 复制 `.env.example` → `.env`
+2. 在 Vercel/Neon 拿到 Postgres 连接串，写入 `DATABASE_URL`（已改为 PostgreSQL，不再用本地 sqlite 文件）
+3. 填写 `DEEPSEEK_API_KEY`、`ADMIN_PASSWORD` 等
+
 ```bash
 npm install
 npx prisma db push
@@ -14,7 +18,7 @@ npm run dev
 - 访客：http://localhost:3000
 - 后台：http://localhost:3000/admin （默认密码见 `.env` 的 `ADMIN_PASSWORD`）
 
-复制 `.env.example` 为 `.env` 并填写密钥。DeepSeek Key、管理员密码勿提交到 Git。
+密钥勿提交到 Git。上线步骤见 [DEPLOY.md](DEPLOY.md)。
 
 ## 功能概览
 
