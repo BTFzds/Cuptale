@@ -15,14 +15,11 @@ const display = Noto_Serif_SC({
 });
 
 export const metadata: Metadata = {
-  title: "杯叙",
-  description: "息盏 OffSip",
+  title: "下班吧",
+  description: "到点就喝一杯",
   icons: {
-    icon: [
-      { url: "/brand/offsip-mark.svg", type: "image/svg+xml" },
-      { url: "/brand/offsip-mark.png", type: "image/png" },
-    ],
-    apple: [{ url: "/brand/offsip-mark.png", type: "image/png" }],
+    icon: [{ url: "/brand/afterwork-mark.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/brand/afterwork-mark.svg", type: "image/svg+xml" }],
   },
 };
 

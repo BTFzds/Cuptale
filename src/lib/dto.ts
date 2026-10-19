@@ -1,13 +1,23 @@
 import type { Drink, Order, Recipe } from "@prisma/client";
 import { parseImageUrls, parseIngredients } from "@/lib/ingredients";
 
+/** Guest flavor comes from the drink, then the recipe's public flavor line. */
+export function guestFlavorText(
+  drink: { flavorText: string },
+  recipe?: { flavorText: string } | null,
+) {
+  return drink.flavorText.trim() || recipe?.flavorText.trim() || "";
+}
+
 /** Public drink shape — never includes recipe internals */
-export function toPublicDrink(drink: Drink) {
+export function toPublicDrink(
+  drink: Drink & { recipe?: { flavorText: string } | null },
+) {
   return {
     id: drink.id,
     name: drink.name,
     imageUrl: drink.imageUrl,
-    flavorText: drink.flavorText,
+    flavorText: guestFlavorText(drink, drink.recipe),
     category: drink.category,
     tagline: drink.tagline,
     sweetness: drink.sweetness,

@@ -35,11 +35,10 @@ export async function POST(
     if (!recipe) return jsonError("配方不存在", 404);
 
     const body = schema.parse(await request.json().catch(() => ({})));
-    const category =
-      body.category &&
-      (DRINK_CATEGORIES as readonly string[]).includes(body.category)
-        ? body.category
-        : "特调";
+    const picked = body.category || recipe.category || "经典";
+    const category = (DRINK_CATEGORIES as readonly string[]).includes(picked)
+      ? picked
+      : "经典";
 
     const existing = await prisma.drink.findFirst({
       where: { recipeId: recipe.id },
@@ -52,7 +51,10 @@ export async function POST(
         body.imageUrl === undefined
           ? recipe.imageUrl
           : body.imageUrl || null,
-      flavorText: body.flavorText || "",
+      flavorText:
+        body.flavorText?.trim() ||
+        recipe.flavorText?.trim() ||
+        "",
       category,
       tagline: body.tagline || "",
       sweetness: body.sweetness ?? 3,

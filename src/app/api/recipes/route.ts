@@ -19,6 +19,8 @@ const createSchema = z.object({
   ingredients: z.array(ingredientSchema).default([]),
   steps: z.string().optional().default(""),
   notes: z.string().optional().default(""),
+  flavorText: z.string().optional().default(""),
+  category: z.string().optional().default("经典"),
 });
 
 export async function GET() {
@@ -45,6 +47,8 @@ export async function POST(request: NextRequest) {
         ingredients: stringifyIngredients(body.ingredients),
         steps: body.steps,
         notes: body.notes,
+        flavorText: body.flavorText,
+        category: body.category || "经典",
       },
     });
     return jsonOk({ recipe: toAdminRecipe(recipe) }, { status: 201 });

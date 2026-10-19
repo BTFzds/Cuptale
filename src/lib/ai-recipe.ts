@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { generateFlavorText } from "@/lib/deepseek";
 import type { Ingredient } from "@/lib/ingredients";
 import { DRINK_CATEGORIES } from "@/lib/categories";
 
@@ -29,17 +30,17 @@ export type RecipeAiDraft = {
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
-const PARSE_SYSTEM = `你是「息盏 OffSip」家庭调酒吧的私人配方助手。用户会贴随手记（日期+酒名+原料毫升）和成片照片说明。
-把信息整理成可保存的内部配方，并推算前台酒品口味参数。
+const PARSE_SYSTEM = `你是「下班吧」家庭调酒吧的私人配方助手。用户会贴随手记（日期+酒名+原料毫升）和成片照片说明。
+把信息整理成可保存的内部配方，并推算前台酒品口味参数（含分类标签）。
 
 硬性要求：
 1. 只输出一个 JSON 对象，不要 markdown 代码围栏，不要其它说明文字。
-2. ingredients 按「倒入顺序」排列；「加满/适量」时 ml 填 0，note 写「加满」或「适量」。
-3. steps 用短中文分步，写清手法（直倒/搅拌/摇和/铺层/加冰等）和顺序；不确定处列入 questions。
-4. taste 供上架菜单用：category 只能是 ${DRINK_CATEGORIES.join("/") } 之一；sweetness/acidity/strength 为 1–5 整数；glassType 据照片或常识推断。
-5. flavorText 为对外风味短文（2–4句），绝对不要写具体原料名、毫升或步骤。
-6. assistantMessage 用口语简短确认你读到了什么，并点出还需要用户确认的 1–3 个手法/顺序问题。
-7. questions 是待确认清单（中文短句数组）。
+2. ingredients 按「倒入顺序」排列；「加满/适量」时 ml 填 0，note 写「加满」或「适量」。若写了「糖浆」但未标明种类，ingredient 名先写「糖浆」，并在 questions 必问：是红色红石榴糖浆还是无色蔗糖糖浆？
+3. steps 用短中文分步，写清手法与顺序；不确定处列入 questions。
+4. taste：category 只能是 ${DRINK_CATEGORIES.join("/") } 之一；sweetness/acidity/strength 为 1–5；glassType 优先根据成片照片推断（气球杯/岩石杯/高球杯等）。
+5. flavorText 必须当场写好对外短文（2–4句），可结合照片颜色与气质，绝对不要写原料名/毫升/步骤。
+6. assistantMessage 一两句即可，少解释。
+7. questions 短句数组；有糖浆未分类时必须包含糖浆种类确认。
 
 JSON 形状：
 {
@@ -65,7 +66,7 @@ JSON 形状：
   "assistantMessage":"..."
 }`;
 
-const CHAT_SYSTEM = `你是「息盏 OffSip」配方助手。用户正在确认倒酒顺序与手法。
+const CHAT_SYSTEM = `你是「下班吧」配方助手。用户正在确认倒酒顺序与手法。
 根据对话更新配方草稿。只输出 JSON（同解析阶段形状），不要代码围栏。
 保留用户已确认的内容；仍不确定的放进 questions；assistantMessage 简短回应。`;
 
@@ -135,13 +136,17 @@ export function heuristicParseRecipeNote(text: string): RecipeAiDraft {
       flavorText: "",
     },
     questions: [
+      ...(ingredients.some((i) => /^糖浆$/.test(i.name) || i.name === "糖浆")
+        ? ["糖浆是红色红石榴，还是无色蔗糖？"]
+        : []),
       "冰块是先加还是各料倒完再加？",
-      "葡萄气泡水是否最后「加满」、需要留分层吗？",
       "有没有摇和或其它手法？",
     ],
-    assistantMessage: `我先按随手记读成「${name}」：${ingredients
-      .map((i) => `${i.name}${i.ml ? i.ml + "ml" : i.note || ""}`)
-      .join("、") || "原料待确认"}。请确认倒入顺序和手法，我再定稿。`,
+    assistantMessage: `读成「${name}」：${
+      ingredients
+        .map((i) => `${i.name}${i.ml ? i.ml + "ml" : i.note || ""}`)
+        .join("、") || "原料待确认"
+    }。确认一下手法就定稿。`,
   };
 }
 
@@ -284,6 +289,7 @@ export async function parseRecipeWithAi(input: {
     }
   }
 
+  let draft = fallback;
   try {
     const completion = await client.chat.completions.create({
       model,
@@ -298,11 +304,30 @@ export async function parseRecipeWithAi(input: {
       max_tokens: 1200,
     });
     const text = completion.choices[0]?.message?.content?.trim();
-    if (!text) return fallback;
-    return normalizeDraft(extractJson(text), fallback);
+    if (text) draft = normalizeDraft(extractJson(text), fallback);
   } catch {
-    return fallback;
+    draft = fallback;
   }
+
+  try {
+    const flavor = await generateFlavorText({
+      drinkName: draft.name,
+      recipeName: draft.name,
+      ingredientsSummary: draft.ingredients
+        .map((i) => `${i.name}${i.ml ? i.ml + "ml" : i.note || ""}`)
+        .join("、"),
+      steps: draft.steps,
+      tasteHints: `甜度${draft.taste.sweetness} 酸度${draft.taste.acidity} 烈度${draft.taste.strength} 杯型${draft.taste.glassType}`,
+      imageUrls,
+    });
+    draft = {
+      ...draft,
+      taste: { ...draft.taste, flavorText: flavor },
+    };
+  } catch {
+    // keep draft.taste.flavorText if any
+  }
+  return draft;
 }
 
 export async function chatRecipeWithAi(input: {

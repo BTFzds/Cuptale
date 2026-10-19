@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AdminListActions } from "@/components/admin-list-actions";
 import { AdminNav } from "@/components/admin-nav";
+import { DrinkShelfButtons } from "@/components/shelf-actions";
 import { requireAdminPage } from "@/lib/admin-guard";
+import { guestFlavorText } from "@/lib/dto";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminDrinksPage() {
   await requireAdminPage();
   const drinks = await prisma.drink.findMany({
+    where: { isPublished: true },
     include: { recipe: true },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
@@ -17,7 +20,7 @@ export default async function AdminDrinksPage() {
     <main>
       <AdminNav />
       <div className="mb-5 flex items-end justify-between gap-3">
-        <h1 className="text-2xl font-semibold">酒品</h1>
+        <h1 className="text-2xl font-semibold">已上架</h1>
         <Link href="/admin/drinks/new" className="btn-primary">
           新增
         </Link>
@@ -37,21 +40,32 @@ export default async function AdminDrinksPage() {
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg font-medium">{drink.name}</h2>
                 <p className="mt-1 line-clamp-2 text-sm text-ink-soft">
-                  {drink.flavorText || drink.tagline || "—"}
+                  {guestFlavorText(drink, drink.recipe) || drink.tagline || "还没写风味介绍"}
                 </p>
                 <p className="mt-2 text-xs text-ink-mute">
                   {drink.category}
                   {drink.isNonAlcoholic ? " · 无酒精" : ""} ·{" "}
                   {drink.recipe?.name || "无配方"} ·{" "}
                   {drink.isPublished ? "已上架" : "未上架"} ·{" "}
-                  {drink.isAvailable ? "供应中" : "暂停"}
+                  {drink.isAvailable ? "供应中" : "售罄"}
                 </p>
               </div>
-              <AdminListActions
-                editHref={`/admin/drinks/${drink.id}`}
-                deleteUrl={`/api/drinks/${drink.id}`}
-                confirmText={`删除「${drink.name}」？相关订单也会删除。`}
-              />
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                <DrinkShelfButtons
+                  drinkId={drink.id}
+                  isPublished={drink.isPublished}
+                  isAvailable={drink.isAvailable}
+                />
+                <AdminListActions
+                  editHref={
+                    drink.recipeId
+                      ? `/admin/recipes/${drink.recipeId}`
+                      : `/admin/drinks/${drink.id}`
+                  }
+                  deleteUrl={`/api/drinks/${drink.id}`}
+                  confirmText={`删除「${drink.name}」？相关订单也会删除。`}
+                />
+              </div>
             </div>
           ))
         )}

@@ -11,6 +11,9 @@ const schema = z.object({
   drinkName: z.string().optional(),
   recipeId: z.string().optional().nullable(),
   tasteHints: z.string().optional(),
+  ingredientsSummary: z.string().optional(),
+  steps: z.string().optional(),
+  imageUrls: z.array(z.string()).optional().default([]),
 });
 
 export async function POST(request: NextRequest) {
@@ -20,9 +23,10 @@ export async function POST(request: NextRequest) {
 
     let drinkName = body.drinkName || "";
     let recipeName = "";
-    let ingredientsSummary = "";
-    let steps = "";
+    let ingredientsSummary = body.ingredientsSummary || "";
+    let steps = body.steps || "";
     let tasteHints = body.tasteHints || "";
+    let imageUrls = body.imageUrls || [];
 
     if (body.drinkId) {
       const drink = await prisma.drink.findUnique({
@@ -36,22 +40,30 @@ export async function POST(request: NextRequest) {
         `甜度${drink.sweetness} 酸度${drink.acidity} 烈度${drink.strength} 杯型${drink.glassType}`;
       if (drink.recipe) {
         recipeName = drink.recipe.name;
-        ingredientsSummary = parseIngredients(drink.recipe.ingredients)
-          .map((i) => `${i.name}${i.ml}ml`)
-          .join("、");
-        steps = drink.recipe.steps;
+        ingredientsSummary =
+          ingredientsSummary ||
+          parseIngredients(drink.recipe.ingredients)
+            .map((i) => `${i.name}${i.ml}ml`)
+            .join("、");
+        steps = steps || drink.recipe.steps;
+        if (!imageUrls.length && drink.imageUrl) imageUrls = [drink.imageUrl];
       }
     }
 
     if (body.recipeId) {
-      const recipe = await prisma.recipe.findUnique({ where: { id: body.recipeId } });
+      const recipe = await prisma.recipe.findUnique({
+        where: { id: body.recipeId },
+      });
       if (recipe) {
         recipeName = recipe.name;
-        ingredientsSummary = parseIngredients(recipe.ingredients)
-          .map((i) => `${i.name}${i.ml}ml`)
-          .join("、");
-        steps = recipe.steps;
+        ingredientsSummary =
+          ingredientsSummary ||
+          parseIngredients(recipe.ingredients)
+            .map((i) => `${i.name}${i.ml}ml`)
+            .join("、");
+        steps = steps || recipe.steps;
         if (!drinkName) drinkName = recipe.name;
+        if (!imageUrls.length && recipe.imageUrl) imageUrls = [recipe.imageUrl];
       }
     }
 
@@ -63,6 +75,7 @@ export async function POST(request: NextRequest) {
       ingredientsSummary,
       steps,
       tasteHints,
+      imageUrls,
     });
 
     return jsonOk({ flavorText });

@@ -80,7 +80,7 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
                   }`}
                 >
                   <div className="flex gap-3">
-                    <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden bg-sand">
+                    <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden border-[2.5px] border-ink bg-sand">
                       {drink.imageUrl ? (
                         <Image
                           src={drink.imageUrl}
@@ -96,7 +96,7 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
                       )}
                       {!drink.isAvailable ? (
                         <span className="absolute left-1 top-1 rounded-sm bg-black/55 px-1.5 py-0.5 text-[9px] text-white">
-                          暂停
+                          售罄
                         </span>
                       ) : null}
                     </div>
@@ -133,7 +133,7 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
                           </Link>
                         ) : (
                           <span className="rounded-sm bg-[#ddd] px-3 py-1.5 text-xs text-white">
-                            暂停供应
+                            售罄
                           </span>
                         )}
                       </div>

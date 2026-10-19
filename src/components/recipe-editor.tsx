@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MultiImageUpload } from "@/components/image-upload";
+import { ImageCropUpload } from "@/components/image-crop-upload";
 import type { RecipeAiDraft, RecipeTasteDraft } from "@/lib/ai-recipe";
 import { DRINK_CATEGORIES } from "@/lib/categories";
 import type { Ingredient } from "@/lib/ingredients";
@@ -26,7 +26,7 @@ const emptyForm: RecipeForm = {
 };
 
 const emptyTaste: RecipeTasteDraft = {
-  category: "特调",
+  category: "经典",
   tagline: "",
   sweetness: 3,
   acidity: 3,
@@ -54,6 +54,8 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
   const [parsing, setParsing] = useState(false);
   const [chatting, setChatting] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [flavorBusy, setFlavorBusy] = useState(false);
+  const [flavorHistory, setFlavorHistory] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -78,6 +80,11 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
           steps: r.steps || "",
           notes: r.notes || "",
         });
+        setTaste((t) => ({
+          ...t,
+          flavorText: r.flavorText || t.flavorText,
+          category: r.category || t.category,
+        }));
         if (r.notes) setRawNote(r.notes);
       })
       .catch(() => setError("加载配方失败"));
@@ -95,6 +102,9 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
   function applyDraft(next: RecipeAiDraft) {
     setDraft(next);
     setTaste(next.taste);
+    if (next.taste.flavorText.trim()) {
+      setFlavorHistory([next.taste.flavorText.trim()]);
+    }
     setForm((prev) => ({
       ...prev,
       name: next.name || prev.name,
@@ -104,7 +114,83 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
       steps: next.steps || prev.steps,
       notes: next.notes || prev.notes,
     }));
-    setMessage("已填入表单，仍可手动改");
+    setMessage("");
+  }
+
+  async function fetchFlavorForDraft(next: RecipeAiDraft) {
+    setFlavorBusy(true);
+    try {
+      const res = await fetch("/api/ai/flavor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          drinkName: next.name,
+          ingredientsSummary: next.ingredients
+            .map((i) => `${i.name}${i.ml ? i.ml + "ml" : i.note || ""}`)
+            .join("、"),
+          steps: next.steps,
+          tasteHints: `甜度${next.taste.sweetness} 酸度${next.taste.acidity} 烈度${next.taste.strength} 杯型${next.taste.glassType}`,
+          imageUrls: form.imageUrls,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "生成失败");
+      const text = String(data.flavorText || "").trim();
+      if (!text) throw new Error("生成失败");
+      setTaste((t) => ({ ...t, flavorText: text }));
+      setFlavorHistory([text]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "风味生成失败");
+    } finally {
+      setFlavorBusy(false);
+    }
+  }
+
+  async function regenerateFlavor() {
+    const name = form.name.trim() || draft?.name || "";
+    if (!name) {
+      setError("请先填写配方名");
+      return;
+    }
+    setFlavorBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/ai/flavor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          drinkName: name,
+          ingredientsSummary: form.ingredients
+            .filter((i) => i.name.trim())
+            .map((i) => `${i.name}${i.ml ? i.ml + "ml" : i.note || ""}`)
+            .join("、"),
+          steps: form.steps,
+          tasteHints: `甜度${taste.sweetness} 酸度${taste.acidity} 烈度${taste.strength} 杯型${taste.glassType}`,
+          imageUrls: form.imageUrls,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "生成失败");
+      const next = String(data.flavorText || "").trim();
+      if (!next) throw new Error("生成失败");
+      setFlavorHistory((prev) =>
+        taste.flavorText.trim() ? [...prev, taste.flavorText.trim()] : prev,
+      );
+      setTaste((t) => ({ ...t, flavorText: next }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "生成失败");
+    } finally {
+      setFlavorBusy(false);
+    }
+  }
+
+  function restorePreviousFlavor() {
+    setFlavorHistory((prev) => {
+      if (!prev.length) return prev;
+      const last = prev[prev.length - 1];
+      setTaste((t) => ({ ...t, flavorText: last }));
+      return prev.slice(0, -1);
+    });
   }
 
   async function handleAiParse() {
@@ -125,6 +211,9 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
       const next = data.draft as RecipeAiDraft;
       applyDraft(next);
       setChat([{ role: "assistant", content: next.assistantMessage }]);
+      if (!next.taste.flavorText.trim()) {
+        void fetchFlavorForDraft(next);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "识别失败");
     } finally {
@@ -170,6 +259,8 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
       ingredients: form.ingredients.filter((i) => i.name.trim()),
       steps: form.steps,
       notes: form.notes || rawNote,
+      flavorText: taste.flavorText,
+      category: taste.category,
     };
     const res = await fetch(
       recipeId ? `/api/recipes/${recipeId}` : "/api/recipes",
@@ -184,13 +275,28 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
     return data.recipe.id as string;
   }
 
+  function validateRequired() {
+    if (!form.name.trim()) {
+      setError("请填写配方名");
+      return false;
+    }
+    if (!taste.flavorText.trim()) {
+      setError("请填写风味介绍（可点重新生成）");
+      return false;
+    }
+    return true;
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
     setError("");
+    if (!validateRequired()) return;
+    setSaving(true);
     try {
-      const id = await persistRecipe();
-      router.push(recipeId ? "/admin/recipes" : `/admin/recipes/${id}`);
+      await persistRecipe();
+      setMessage("保存成功");
+      await new Promise((r) => setTimeout(r, 700));
+      router.push("/admin/recipes");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失败");
@@ -200,10 +306,8 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
   }
 
   async function handlePublish() {
-    if (!form.name.trim()) {
-      setError("请先填写配方名");
-      return;
-    }
+    setError("");
+    if (!validateRequired()) return;
     setPublishing(true);
     setError("");
     setMessage("");
@@ -245,19 +349,14 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
   return (
     <div className="space-y-5">
       <section className="border border-[#f0f0f0] bg-white p-5 space-y-3">
-        <div>
-          <h2 className="text-base font-medium">AI 识配方</h2>
-          <p className="mt-1 text-xs text-ink-mute">
-            粘贴随手记 + 上传成片，先识别再对话确认手法，最后仍可手改
-          </p>
-        </div>
+        <h2 className="text-base font-medium">AI 识配方</h2>
         <textarea
           className="field min-h-[100px]"
           value={rawNote}
           onChange={(e) => setRawNote(e.target.value)}
-          placeholder={"例如：\n2026.10.18初恋\n朗姆酒25ml 西柚味水溶c 150ml 葡萄气泡水加满"}
+          placeholder={"2026.10.18初恋\n朗姆酒25ml …"}
         />
-        <MultiImageUpload
+        <ImageCropUpload
           urls={form.imageUrls}
           onChange={(urls) =>
             setForm((p) => ({
@@ -306,7 +405,7 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
                 className="field"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder="例如：先加冰，再倒朗姆，水溶C，最后气泡水加满，不摇"
+                placeholder="糖浆用红石榴；先加冰，最后气泡水加满，不摇"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -329,7 +428,7 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
 
       <form onSubmit={handleSave} className="card-surface space-y-4 p-5">
         <label className="block space-y-2">
-          <span className="text-sm text-ink-soft">配方名</span>
+          <span className="text-sm text-ink-soft">配方名 *</span>
           <input
             className="field"
             value={form.name}
@@ -415,7 +514,7 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
         </label>
 
         <div className="space-y-3 border-t border-[#f0f0f0] pt-4">
-          <p className="text-sm text-ink-soft">上架参数（可手改，上架时写入酒品）</p>
+          <p className="text-sm text-ink-soft">上架参数</p>
           <div className="grid grid-cols-2 gap-3">
             <label className="block space-y-1 text-sm">
               <span>分类</span>
@@ -482,17 +581,39 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
               />
             </label>
           </div>
-          <label className="block space-y-1 text-sm">
-            <span>对外风味文案</span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm">风味介绍 *</span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="btn-ghost px-2 py-1 text-xs"
+                  disabled={!flavorHistory.length}
+                  onClick={restorePreviousFlavor}
+                >
+                  上一个
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost px-2 py-1 text-xs"
+                  disabled={flavorBusy}
+                  onClick={() => void regenerateFlavor()}
+                >
+                  {flavorBusy ? "…" : "重新生成"}
+                </button>
+              </div>
+            </div>
             <textarea
               className="field min-h-[90px]"
               value={taste.flavorText}
               onChange={(e) =>
                 setTaste((t) => ({ ...t, flavorText: e.target.value }))
               }
-              placeholder="上架时展示给客人，勿写原料毫升"
             />
-          </label>
+            {flavorBusy ? (
+              <p className="text-xs text-ink-mute">风味生成中…</p>
+            ) : null}
+          </div>
           <div className="flex flex-wrap gap-4 text-sm">
             <label className="flex items-center gap-2">
               <input
@@ -518,7 +639,9 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
         </div>
 
         {error ? <p className="text-sm text-red-700/80">{error}</p> : null}
-        {message ? <p className="text-sm text-ink-soft">{message}</p> : null}
+        {message ? (
+          <p className="text-sm font-medium text-ink">{message}</p>
+        ) : null}
 
         <div className="flex flex-wrap gap-3">
           <button className="btn-primary" disabled={saving}>

@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { getGuestDisplayName, getOrCreateGuestId } from "@/lib/guest-profile";
 import { addOrderToken } from "@/lib/order-tokens";
 
 export function OrderSheet({
@@ -19,6 +20,12 @@ export function OrderSheet({
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    getOrCreateGuestId();
+    const saved = getGuestDisplayName();
+    if (saved) setNickname(saved);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,6 +45,10 @@ export function OrderSheet({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "下单失败");
       addOrderToken(data.publicToken);
+      if (nickname.trim()) {
+        const { setGuestDisplayName } = await import("@/lib/guest-profile");
+        setGuestDisplayName(nickname);
+      }
       router.push("/my-orders");
     } catch (err) {
       setError(err instanceof Error ? err.message : "下单失败");
@@ -59,7 +70,7 @@ export function OrderSheet({
       <p className="text-sm font-medium">点一杯「{drinkName}」</p>
       <input
         className="field"
-        placeholder="你的昵称"
+        placeholder="ID"
         value={nickname}
         onChange={(e) => setNickname(e.target.value)}
         required

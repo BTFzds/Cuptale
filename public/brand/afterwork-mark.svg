@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- desk line -->
+  <path d="M28 84h64" stroke="#1a1a1a" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- rocks glass -->
+  <path d="M44 42h32l-3 34H47l-3-34Z" stroke="#1a1a1a" stroke-width="2.4" stroke-linejoin="round"/>
+  <path d="M48 52h24" stroke="#1a1a1a" stroke-width="1.6" stroke-linecap="round"/>
+  <!-- ice -->
+  <rect x="52" y="56" width="8" height="8" stroke="#1a1a1a" stroke-width="1.4" transform="rotate(12 56 60)"/>
+  <!-- small clock hint (off-work) -->
+  <circle cx="86" cy="34" r="10" stroke="#1a1a1a" stroke-width="2"/>
+  <path d="M86 28v7l4 3" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

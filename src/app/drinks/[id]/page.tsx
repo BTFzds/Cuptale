@@ -15,6 +15,7 @@ export default async function DrinkDetailPage({
 }) {
   const drink = await prisma.drink.findFirst({
     where: { id: params.id, isPublished: true },
+    include: { recipe: { select: { flavorText: true } } },
   });
   if (!drink) notFound();
 
@@ -22,7 +23,7 @@ export default async function DrinkDetailPage({
 
   return (
     <main className="shell">
-      <div className="relative aspect-[4/5] bg-sand">
+      <div className="relative aspect-square border-b-[3px] border-ink bg-sand">
         {drink.imageUrl ? (
           <Image
             src={drink.imageUrl}
@@ -58,7 +59,9 @@ export default async function DrinkDetailPage({
             </p>
           ) : null}
           <p className="mt-3 text-sm leading-7 text-ink-soft">
-            {drink.flavorText || "暂无介绍"}
+            {drink.flavorText.trim() ||
+              drink.recipe?.flavorText.trim() ||
+              "暂无介绍"}
           </p>
         </div>
 

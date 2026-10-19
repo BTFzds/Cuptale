@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { toAdminOrder, toPublicOrder } from "@/lib/dto";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/http";
+import { parseIngredients } from "@/lib/ingredients";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
@@ -23,7 +24,16 @@ export async function GET() {
   try {
     await requireAdmin();
     const orders = await prisma.order.findMany({
-      include: { drink: { select: { id: true, name: true, imageUrl: true } } },
+      include: {
+        drink: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+            recipe: { select: { id: true, ingredients: true } },
+          },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
 
@@ -40,7 +50,15 @@ export async function GET() {
     }
 
     return jsonOk({
-      orders: orders.map(toAdminOrder),
+      orders: orders.map((order) => ({
+        ...toAdminOrder(order),
+        recipeId: order.drink.recipe?.id || null,
+        ingredientSummary: parseIngredients(order.drink.recipe?.ingredients)
+          .map((item) =>
+            item.ml ? `${item.name} ${item.ml}ml` : `${item.name}${item.note ? ` ${item.note}` : ""}`,
+          )
+          .join(" · "),
+      })),
       summary: Array.from(summaryMap.values()).sort((a, b) => b.quantity - a.quantity),
     });
   } catch (error) {

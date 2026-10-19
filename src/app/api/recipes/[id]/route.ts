@@ -19,6 +19,8 @@ const updateSchema = z.object({
   ingredients: z.array(ingredientSchema).optional(),
   steps: z.string().optional(),
   notes: z.string().optional(),
+  flavorText: z.string().optional(),
+  category: z.string().optional(),
 });
 
 export async function GET(
@@ -53,12 +55,30 @@ export async function PATCH(
             : stringifyImageUrls(body.imageUrls),
         steps: body.steps,
         notes: body.notes,
+        flavorText: body.flavorText,
+        category: body.category,
         ingredients:
           body.ingredients === undefined
             ? undefined
             : stringifyIngredients(body.ingredients),
       },
     });
+    if (
+      body.flavorText !== undefined ||
+      body.name ||
+      body.imageUrl !== undefined ||
+      body.category
+    ) {
+      await prisma.drink.updateMany({
+        where: { recipeId: recipe.id },
+        data: {
+          ...(body.name ? { name: body.name } : {}),
+          ...(body.imageUrl !== undefined ? { imageUrl: body.imageUrl || null } : {}),
+          ...(body.flavorText !== undefined ? { flavorText: body.flavorText } : {}),
+          ...(body.category ? { category: body.category } : {}),
+        },
+      });
+    }
     return jsonOk({ recipe: toAdminRecipe(recipe) });
   } catch (error) {
     return handleRouteError(error);

@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const featured = await prisma.drink.findMany({
     where: { isPublished: true },
+    include: { recipe: { select: { flavorText: true } } },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     take: 2,
   });
@@ -50,7 +51,7 @@ export default async function HomePage() {
                   drink.isAvailable ? "" : "opacity-45 grayscale"
                 }`}
               >
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden bg-sand">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden border-[2.5px] border-ink bg-sand">
                   {drink.imageUrl ? (
                     <Image
                       src={drink.imageUrl}
@@ -64,7 +65,9 @@ export default async function HomePage() {
                 <div className="min-w-0 flex-1 py-0.5">
                   <p className="truncate text-[15px] font-medium">{drink.name}</p>
                   <p className="mt-1 line-clamp-2 text-xs leading-5 text-ink-mute">
-                    {drink.tagline || drink.flavorText}
+                    {drink.flavorText.trim() ||
+                      drink.recipe?.flavorText.trim() ||
+                      drink.tagline}
                   </p>
                 </div>
               </Link>
