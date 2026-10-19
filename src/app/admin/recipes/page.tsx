@@ -37,11 +37,25 @@ export default async function AdminRecipesPage() {
                 className="flex items-start justify-between gap-3 border border-[#f0f0f0] p-4"
               >
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-lg font-medium">{recipe.name}</h2>
+                  <Link
+                    href={`/admin/recipes/${recipe.id}`}
+                    className="text-lg font-medium"
+                  >
+                    {recipe.name}
+                  </Link>
                   <p className="mt-2 text-sm text-ink-soft">
                     {ingredients.length
-                      ? ingredients.map((i) => `${i.name} ${i.ml}ml`).join(" · ")
+                      ? ingredients
+                          .map((i) =>
+                            i.ml
+                              ? `${i.name} ${i.ml}ml`
+                              : `${i.name}${i.note ? ` ${i.note}` : ""}`,
+                          )
+                          .join(" · ")
                       : "未填原料"}
+                  </p>
+                  <p className="mt-1 text-xs text-ink-mute">
+                    {recipe.imageUrl ? "已有成片" : "仅手记，可稍后补图再上架"}
                   </p>
                 </div>
                 <AdminListActions

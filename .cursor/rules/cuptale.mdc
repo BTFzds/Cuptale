@@ -10,9 +10,11 @@ alwaysApply: true
 ## Stack
 
 - Next.js App Router, TypeScript, Tailwind CSS, Framer Motion
-- Prisma + Neon Postgres (`DATABASE_URL`); images via Vercel Blob (local fallback `/public/uploads`)
+- Prisma + Postgres (`DATABASE_URL`：Neon 或 Supabase)
+- Images: Netlify → Supabase Storage (`cuptale-images` + `SUPABASE_SERVICE_ROLE_KEY`); optional Vercel Blob; local fallback `/public/uploads`
 - DeepSeek OpenAI-compatible API (`base_url` + `deepseek-flash`) — **server-only**
-- Zod for request validation; jose for admin session cookie
+- Zod for request validation; jose for admin session cookie（admin 门禁已开放）
+- Deploy target may be **Netlify** (`@netlify/plugin-nextjs`) or Vercel
 
 ## Product boundaries (hard)
 
@@ -21,6 +23,8 @@ alwaysApply: true
 - Admin lives under `/admin` with **no password** (open gate); do **not** link it from guest navigation.
 - Guest public APIs must never return recipes; use `?admin=1` / `scope=admin` only for admin UI fetches.
 - Drink (menu) and Recipe (private notebook) are separate; a drink may publish without a recipe.
+- Recipe notebook flow: paste rough notes + photos → AI parse/chat（顺序与手法）→ save private recipe → later add photos → **上架为酒品**（copies taste tags; guests still never see recipe internals）.
+- Netlify image upload needs Supabase Storage env; empty tables alone are not the upload failure cause（serverless 不能写本地 `public/uploads`）.
 - Unavailable drinks: greyed out, not hidden; not orderable.
 - Guest can track **only their own** orders via `publicToken` stored locally.
 
@@ -51,6 +55,11 @@ alwaysApply: true
 - Call only from server (Route Handlers / server actions).
 - Prompt must produce short literary flavor notes; **never reveal exact ingredients or ratios**.
 - Support generate + regenerate; always allow human edit before save.
+
+## DeepSeek recipe ingest (admin)
+
+- `/api/ai/recipe` + `/api/ai/recipe/chat` parse hand notes into private recipe + suggested taste; always allow manual edit.
+- Heuristic fallback must work without API key for basic `日期+酒名+原料ml` notes.
 
 ## Deploy notes
 

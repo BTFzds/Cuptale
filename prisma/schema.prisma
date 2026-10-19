@@ -11,6 +11,8 @@ model Recipe {
   id          String   @id @default(cuid())
   name        String
   imageUrl    String?
+  /// JSON string array of extra photo URLs (cover still uses imageUrl)
+  imageUrls   String   @default("[]")
   ingredients String   @default("[]")
   steps       String   @default("")
   notes       String   @default("")

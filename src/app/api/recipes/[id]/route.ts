@@ -3,17 +3,19 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { toAdminRecipe } from "@/lib/dto";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/http";
-import { stringifyIngredients } from "@/lib/ingredients";
+import { stringifyImageUrls, stringifyIngredients } from "@/lib/ingredients";
 import { prisma } from "@/lib/prisma";
 
 const ingredientSchema = z.object({
   name: z.string().min(1),
   ml: z.number().min(0),
+  note: z.string().optional(),
 });
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   imageUrl: z.string().optional().nullable(),
+  imageUrls: z.array(z.string()).optional(),
   ingredients: z.array(ingredientSchema).optional(),
   steps: z.string().optional(),
   notes: z.string().optional(),
@@ -45,6 +47,10 @@ export async function PATCH(
       data: {
         name: body.name,
         imageUrl: body.imageUrl === undefined ? undefined : body.imageUrl || null,
+        imageUrls:
+          body.imageUrls === undefined
+            ? undefined
+            : stringifyImageUrls(body.imageUrls),
         steps: body.steps,
         notes: body.notes,
         ingredients:

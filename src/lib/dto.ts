@@ -1,5 +1,5 @@
 import type { Drink, Order, Recipe } from "@prisma/client";
-import { parseIngredients } from "@/lib/ingredients";
+import { parseImageUrls, parseIngredients } from "@/lib/ingredients";
 
 /** Public drink shape — never includes recipe internals */
 export function toPublicDrink(drink: Drink) {
@@ -39,6 +39,7 @@ export function toAdminRecipe(recipe: Recipe) {
   return {
     ...recipe,
     ingredients: parseIngredients(recipe.ingredients),
+    imageUrls: parseImageUrls(recipe.imageUrls),
   };
 }
 

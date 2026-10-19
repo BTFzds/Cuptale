@@ -11,6 +11,7 @@ model Recipe {
   id          String   @id @default(cuid())
   name        String
   imageUrl    String?
+  imageUrls   String   @default("[]")
   ingredients String   @default("[]")
   steps       String   @default("")
   notes       String   @default("")
