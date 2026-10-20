@@ -32,7 +32,7 @@ alwaysApply: true
 
 ## UX / brand
 
-- Brand name: **HUSH**; tagline「轻声一杯」; mark at `public/brand/hush-logo.jpg`.
+- Brand name: **HUSH**; mark at `public/brand/hush-logo.jpg`（无副标题标语）.
 - Mobile-first; guest IA: 首页 / 点单 / 我的; order page uses left category + right list.
 - Visual: dark plum background (`#160C1F`), pink accent (`#FF6EC7`), soft lavender text; neon-bar calm, not dashboard clutter.
 - Flow: home → order menu → drink detail → submit → my orders.

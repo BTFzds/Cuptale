@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { BRAND_MARK, BRAND_NAME, BRAND_TAGLINE } from "@/lib/brand";
+import { BRAND_MARK, BRAND_NAME } from "@/lib/brand";
 
 export function BrandLogo({
   size = 88,
@@ -24,14 +24,9 @@ export function BrandLogo({
         />
       </div>
       {showWordmark ? (
-        <div className="mt-4">
-          <p className="font-display text-3xl tracking-[0.35em] text-ink">
-            {BRAND_NAME}
-          </p>
-          <p className="mt-2 text-xs tracking-widest text-ink-mute">
-            {BRAND_TAGLINE}
-          </p>
-        </div>
+        <p className="mt-4 font-display text-3xl tracking-[0.35em] text-ink">
+          {BRAND_NAME}
+        </p>
       ) : null}
     </div>
   );

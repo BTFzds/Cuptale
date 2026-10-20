@@ -16,7 +16,7 @@ const display = Noto_Serif_SC({
 
 export const metadata: Metadata = {
   title: "HUSH",
-  description: "轻声一杯",
+  description: "HUSH 家庭调酒吧",
   icons: {
     icon: [{ url: "/brand/hush-logo.jpg", type: "image/jpeg" }],
     apple: [{ url: "/brand/hush-logo.jpg", type: "image/jpeg" }],
