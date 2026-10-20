@@ -1,5 +1,5 @@
-const GUEST_ID_KEY = "afterwork_guest_id";
-const GUEST_NAME_KEY = "afterwork_guest_name";
+const GUEST_ID_KEY = "hush_guest_id";
+const GUEST_NAME_KEY = "hush_guest_name";
 
 export function getOrCreateGuestId() {
   if (typeof window === "undefined") return "";

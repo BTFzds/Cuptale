@@ -76,7 +76,7 @@ export function OrdersBoard() {
         </button>
       </div>
 
-      <section className="border border-[#f0f0f0] p-4">
+      <section className="card-surface p-4">
         <h2 className="mb-3 text-sm font-medium">未完成汇总</h2>
         {summary.length === 0 ? (
           <p className="text-sm text-ink-mute">暂无</p>
@@ -96,11 +96,11 @@ export function OrdersBoard() {
       </section>
 
       {loading ? <p className="text-sm text-ink-mute">加载中…</p> : null}
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
       <div className="space-y-3">
         {orders.map((order) => (
-          <article key={order.id} className="border border-[#f0f0f0] p-4">
+          <article key={order.id} className="card-surface p-4">
             <button
               type="button"
               className="w-full text-left"
@@ -117,7 +117,7 @@ export function OrdersBoard() {
             </button>
             <button
               type="button"
-              className="btn-ghost mt-3 px-3 py-1.5 text-xs text-red-700"
+              className="btn-ghost mt-3 px-3 py-1.5 text-xs text-red-400"
               onClick={() => deleteOrder(order.id)}
             >
               删除
@@ -128,9 +128,9 @@ export function OrdersBoard() {
 
       {active ? (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-4 sm:items-center">
-          <div className="w-full max-w-sm bg-white p-4">
+          <div className="w-full max-w-sm bg-sand-card p-4">
             {active.drinkImageUrl ? (
-              <div className="border-[3px] border-ink bg-[#f7f7f7] p-1">
+              <div className="border-[3px] border-hush-pink/40 bg-[#1e1028] p-1">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={active.drinkImageUrl}
@@ -139,7 +139,7 @@ export function OrdersBoard() {
                 />
               </div>
             ) : (
-              <div className="flex h-28 items-center justify-center border-[3px] border-ink bg-sand text-xs text-ink-mute">
+              <div className="flex h-28 items-center justify-center border-[3px] border-hush-pink/40 bg-sand text-xs text-ink-mute">
                 暂无图片
               </div>
             )}

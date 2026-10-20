@@ -195,10 +195,10 @@ export function DrinkEditor({ drinkId }: { drinkId?: string }) {
             key={label}
             className={`flex-1 px-1 py-2 text-center text-[11px] ${
               i === step
-                ? "bg-ink text-white"
+                ? "bg-hush-pink text-[#1a0b22]"
                 : i < step
-                  ? "bg-[#e8e8e8] text-ink"
-                  : "bg-[#f5f5f5] text-ink-mute"
+                  ? "bg-hush-plum/70 text-ink"
+                  : "bg-sand text-ink-mute"
             }`}
           >
             {i + 1}. {label}
@@ -206,7 +206,7 @@ export function DrinkEditor({ drinkId }: { drinkId?: string }) {
         ))}
       </ol>
 
-      <div className="border border-[#f0f0f0] bg-white p-5">
+      <div className="card-surface p-5">
         {step === 0 ? (
           <div className="space-y-4">
             <label className="block space-y-2">

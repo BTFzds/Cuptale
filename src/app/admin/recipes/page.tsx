@@ -28,7 +28,7 @@ export default async function AdminRecipesPage() {
 
       <div className="space-y-3">
         {drafts.length === 0 ? (
-          <div className="border border-[#f0f0f0] px-5 py-8 text-center text-sm text-ink-mute">
+          <div className="card-surface px-5 py-8 text-center text-sm text-ink-mute">
             没有待上架的配方
           </div>
         ) : (
@@ -37,7 +37,7 @@ export default async function AdminRecipesPage() {
             return (
               <div
                 key={recipe.id}
-                className="flex items-start justify-between gap-3 border border-[#f0f0f0] p-4"
+                className="flex items-start justify-between gap-3 card-surface p-4"
               >
                 <div className="min-w-0 flex-1">
                   <Link

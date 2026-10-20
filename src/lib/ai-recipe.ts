@@ -30,7 +30,7 @@ export type RecipeAiDraft = {
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
-const PARSE_SYSTEM = `你是「下班吧」家庭调酒吧的私人配方助手。用户会贴随手记（日期+酒名+原料毫升）和成片照片说明。
+const PARSE_SYSTEM = `你是「HUSH」家庭调酒吧的私人配方助手。用户会贴随手记（日期+酒名+原料毫升）和成片照片说明。
 把信息整理成可保存的内部配方，并推算前台酒品口味参数（含分类标签）。
 
 硬性要求：
@@ -66,7 +66,7 @@ JSON 形状：
   "assistantMessage":"..."
 }`;
 
-const CHAT_SYSTEM = `你是「下班吧」配方助手。用户正在确认倒酒顺序与手法。
+const CHAT_SYSTEM = `你是「HUSH」配方助手。用户正在确认倒酒顺序与手法。
 根据对话更新配方草稿。只输出 JSON（同解析阶段形状），不要代码围栏。
 保留用户已确认的内容；仍不确定的放进 questions；assistantMessage 简短回应。`;
 

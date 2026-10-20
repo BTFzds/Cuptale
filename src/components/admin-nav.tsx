@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BRAND_NAME } from "@/lib/brand";
 
 const items = [
   { href: "/admin/orders", label: "订单" },
@@ -15,7 +16,9 @@ export function AdminNav() {
   return (
     <header className="mb-6 space-y-4">
       <div>
-        <p className="text-xl font-semibold tracking-wide text-ink">后台</p>
+        <p className="text-xl font-semibold tracking-[0.2em] text-ink">
+          {BRAND_NAME} · 后台
+        </p>
       </div>
       <nav className="flex gap-2">
         {items.map((item) => {
@@ -24,8 +27,10 @@ export function AdminNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`rounded-sm px-4 py-2 text-sm ${
-                active ? "bg-ink text-white" : "bg-[#f5f5f5] text-ink-soft"
+              className={`rounded-sm px-4 py-2 text-sm transition ${
+                active
+                  ? "bg-hush-pink text-[#1a0b22] shadow-hush"
+                  : "bg-sand text-ink-soft"
               }`}
             >
               {item.label}

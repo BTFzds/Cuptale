@@ -38,7 +38,7 @@ export default async function HomePage() {
         </div>
 
         {featured.length === 0 ? (
-          <div className="border border-[#f0f0f0] px-4 py-10 text-center text-sm text-ink-mute">
+          <div className="card-surface px-4 py-10 text-center text-sm text-ink-mute">
             暂无酒品
           </div>
         ) : (
@@ -47,11 +47,11 @@ export default async function HomePage() {
               <Link
                 key={drink.id}
                 href={`/drinks/${drink.id}`}
-                className={`flex gap-3 border border-[#f0f0f0] p-3 ${
+                className={`flex gap-3 card-surface p-3 ${
                   drink.isAvailable ? "" : "opacity-45 grayscale"
                 }`}
               >
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden border-[2.5px] border-ink bg-sand">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden border-[2.5px] border-hush-pink/50 bg-sand">
                   {drink.imageUrl ? (
                     <Image
                       src={drink.imageUrl}

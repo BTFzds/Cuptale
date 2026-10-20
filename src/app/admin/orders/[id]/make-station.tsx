@@ -99,7 +99,7 @@ export function MakeStation({ orderId }: { orderId: string }) {
         </div>
       ) : null}
 
-      <section className="border border-[#f0f0f0] p-4">
+      <section className="card-surface p-4">
         <h2 className="text-sm font-medium">材料</h2>
         <ul className="mt-2 space-y-1 text-sm">
           {order.ingredients.length === 0 ? (
@@ -118,7 +118,7 @@ export function MakeStation({ orderId }: { orderId: string }) {
         ) : null}
       </section>
 
-      <section className="border border-[#f0f0f0] p-4">
+      <section className="card-surface p-4">
         <h2 className="text-sm font-medium">怎么调</h2>
         <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
           {order.steps || "还没写步骤"}

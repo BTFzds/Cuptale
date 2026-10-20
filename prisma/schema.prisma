@@ -2,9 +2,8 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Local-only helper. Production schema.prisma on GitHub is postgresql.
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -24,10 +23,10 @@ model Recipe {
 }
 
 model Drink {
-  id             String   @id @default(cuid())
-  name           String
-  imageUrl       String?
-  flavorText     String   @default("")
+  id          String   @id @default(cuid())
+  name        String
+  imageUrl    String?
+  flavorText  String   @default("")
   category       String   @default("经典")
   tagline        String   @default("")
   sweetness      Int      @default(3)
@@ -38,15 +37,15 @@ model Drink {
   isNonAlcoholic Boolean  @default(false)
   hasDairy       Boolean  @default(false)
   hasCaffeine    Boolean  @default(false)
-  allergens      String   @default("")
-  isPublished    Boolean  @default(false)
-  isAvailable    Boolean  @default(true)
-  sortOrder      Int      @default(0)
-  recipeId       String?
-  recipe         Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  orders         Order[]
+  allergens   String   @default("")
+  isPublished Boolean  @default(false)
+  isAvailable Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  recipeId    String?
+  recipe      Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      Order[]
 }
 
 model Order {

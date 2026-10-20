@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 
-const FLAVOR_SYSTEM_PROMPT = `你是「下班吧」家庭调酒吧的文案师。根据内部配方信息和成片外观，写一段对外短风味介绍。
+const FLAVOR_SYSTEM_PROMPT = `你是「HUSH」家庭调酒吧的文案师。根据内部配方信息和成片外观，写一段对外短风味介绍。
 
 要求：
 1. 中文，2–4 句，约 40–90 字，口语自然。

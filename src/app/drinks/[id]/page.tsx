@@ -23,7 +23,7 @@ export default async function DrinkDetailPage({
 
   return (
     <main className="shell">
-      <div className="relative aspect-square border-b-[3px] border-ink bg-sand">
+      <div className="relative aspect-square border-b-[3px] border-hush-pink/40 bg-sand">
         {drink.imageUrl ? (
           <Image
             src={drink.imageUrl}
@@ -36,7 +36,7 @@ export default async function DrinkDetailPage({
         ) : null}
         <Link
           href="/order"
-          className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-xs text-ink"
+          className="absolute left-4 top-4 rounded-full bg-[#1a0f24]/85 px-3 py-1.5 text-xs text-ink backdrop-blur"
         >
           ← 菜单
         </Link>
@@ -65,7 +65,7 @@ export default async function DrinkDetailPage({
           </p>
         </div>
 
-        <div className="space-y-2.5 border border-[#f0f0f0] px-4 py-3">
+        <div className="space-y-2.5 card-surface px-4 py-3">
           <TasteMeter label="甜度" value={drink.sweetness} />
           <TasteMeter label="酸度" value={drink.acidity} />
           <TasteMeter label="烈度" value={drink.strength} />

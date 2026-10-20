@@ -3,13 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --ink: #1a1a1a;
-  --ink-soft: #666666;
-  --ink-mute: #999999;
-  --line: #ececec;
-  --bg: #ffffff;
-  --sand: #f7f5f2;
-  --accent: #1a1a1a;
+  --ink: #f7e9f4;
+  --ink-soft: #cdb0d8;
+  --ink-mute: #8f6f9e;
+  --line: #4a2d5c;
+  --bg: #160c1f;
+  --sand: #2a1638;
+  --accent: #ff6ec7;
+  --panel: #241430;
 }
 
 html {
@@ -18,33 +19,47 @@ html {
 
 body {
   color: var(--ink);
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 110, 199, 0.22), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(75, 42, 98, 0.55), transparent 50%),
+    var(--bg);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
 @layer components {
   .shell {
-    @apply mx-auto w-full max-w-md min-h-screen bg-white pb-24;
+    @apply mx-auto w-full max-w-md min-h-screen pb-24;
+    background: linear-gradient(
+      180deg,
+      rgba(36, 20, 48, 0.92) 0%,
+      rgba(22, 12, 31, 0.98) 40%,
+      #160c1f 100%
+    );
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-sm bg-ink px-5 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35;
+    @apply inline-flex items-center justify-center rounded-sm bg-hush-pink px-5 py-3 text-sm font-medium text-[#1a0b22] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35;
+    box-shadow: 0 0 18px rgba(255, 110, 199, 0.28);
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center rounded-sm border border-ink bg-white px-5 py-3 text-sm font-medium text-ink transition active:scale-[0.98];
+    @apply inline-flex items-center justify-center rounded-sm border border-hush-pink/70 bg-transparent px-5 py-3 text-sm font-medium text-ink transition active:scale-[0.98];
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-sm border border-[#ececec] bg-white px-4 py-2.5 text-sm text-ink-soft transition active:scale-[0.98];
+    @apply inline-flex items-center justify-center rounded-sm border border-[#4a2d5c] bg-[#241430] px-4 py-2.5 text-sm text-ink-soft transition active:scale-[0.98];
   }
 
   .field {
-    @apply w-full rounded-sm border border-[#e8e8e8] bg-white px-3.5 py-3 text-sm outline-none transition focus:border-ink;
+    @apply w-full rounded-sm border border-[#4a2d5c] bg-[#1e1028] px-3.5 py-3 text-sm text-ink outline-none transition focus:border-hush-pink;
   }
 
   .tag {
-    @apply inline-flex items-center rounded-sm border border-[#e5e5e5] px-1.5 py-0.5 text-[10px] text-ink-soft;
+    @apply inline-flex items-center rounded-sm border border-[#4a2d5c] bg-[#2a1638] px-1.5 py-0.5 text-[10px] text-ink-soft;
+  }
+
+  .card-surface {
+    @apply border border-[#4a2d5c] bg-[#241430];
   }
 }

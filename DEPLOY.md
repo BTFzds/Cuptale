@@ -34,7 +34,7 @@
 
 | Name | 值 |
 |------|-----|
-| `ADMIN_PASSWORD` | 如 `offsip-home` |
+| `ADMIN_PASSWORD` | 如 `hush-home` |
 | `ADMIN_SESSION_SECRET` | 长随机串 |
 | `DEEPSEEK_API_KEY` | 你的 Key |
 | `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` |
@@ -54,7 +54,7 @@
 | Name | 示例 / 说明 |
 |------|-------------|
 | `DATABASE_URL` | Neon 连接串（必须） |
-| `ADMIN_PASSWORD` | 后台密码，如 `offsip-home` |
+| `ADMIN_PASSWORD` | 后台密码，如 `hush-home` |
 | `ADMIN_SESSION_SECRET` | 一长串随机字符 |
 | `DEEPSEEK_API_KEY` | 你的 DeepSeek Key |
 | `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` |

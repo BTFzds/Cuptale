@@ -96,7 +96,7 @@ export function MultiImageUpload({
               />
               <button
                 type="button"
-                className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-ink text-[10px] text-white"
+                className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-hush-pink text-[10px] text-[#1a0b22]"
                 onClick={() => onChange(urls.filter((_, i) => i !== index))}
               >
                 ×

@@ -42,7 +42,7 @@ export function DrinkCard({ drink, index = 0 }: { drink: PublicDrinkCard; index?
             </div>
           )}
           {unavailable ? (
-            <span className="absolute right-3 top-3 rounded-full bg-ink/70 px-3 py-1 text-xs text-sand">
+            <span className="absolute right-3 top-3 rounded-sm bg-[#1a0f24]/80 px-3 py-1 text-xs text-hush-pink">
               暂停供应
             </span>
           ) : null}

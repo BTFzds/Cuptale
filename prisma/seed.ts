@@ -44,7 +44,7 @@ async function main() {
       isPublished: true,
       isAvailable: true,
       recipeId: recipe.id,
-      imageUrl: "/brand/offsip-mark.png",
+      imageUrl: "/brand/hush-logo.jpg",
     },
   });
 
@@ -71,7 +71,7 @@ async function main() {
       hasCaffeine: false,
       isPublished: true,
       isAvailable: true,
-      imageUrl: "/brand/offsip-mark.png",
+      imageUrl: "/brand/hush-logo.jpg",
     },
   });
 
@@ -99,7 +99,7 @@ async function main() {
       allergens: "乳制品",
       isPublished: true,
       isAvailable: false,
-      imageUrl: "/brand/offsip-mark.png",
+      imageUrl: "/brand/hush-logo.jpg",
     },
   });
 }

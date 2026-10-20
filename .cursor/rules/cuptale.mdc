@@ -1,11 +1,11 @@
 ---
-description: CupTale / 息盏 OffSip project conventions — always apply
+description: CupTale / HUSH project conventions — always apply
 alwaysApply: true
 ---
 
-# 杯叙 CupTale · 息盏 OffSip
+# 杯叙 CupTale · HUSH
 
-家庭私人调酒点单与配方管理系统（品牌暂定「下班吧」）。移动端优先网页；访客无登录点单；管理员密码进入 `/admin`。
+家庭私人调酒点单与配方管理系统（品牌 **HUSH**）。移动端优先网页；访客无登录点单；管理员开放进入 `/admin`。
 
 ## Stack
 
@@ -32,14 +32,13 @@ alwaysApply: true
 
 ## UX / brand
 
-- Mobile-first; guest IA like 喜茶: 首页 / 点单 / 我的; order page uses left category + right list.
-- Visual: clean white, black accents, generous whitespace (HEYTEA-like), still OffSip late-night calm.
+- Brand name: **HUSH**; tagline「轻声一杯」; mark at `public/brand/hush-logo.jpg`.
+- Mobile-first; guest IA: 首页 / 点单 / 我的; order page uses left category + right list.
+- Visual: dark plum background (`#160C1F`), pink accent (`#FF6EC7`), soft lavender text; neon-bar calm, not dashboard clutter.
 - Flow: home → order menu → drink detail → submit → my orders.
-- Brand mark: OffSip moon + rocks-glass logo in `public/brand/`.
 - Chinese UI copy: short and plain; avoid marketing fluff / “AI 文案感”.
-- Quiet micro-interactions; avoid purple/glow/dashboard clutter on guest surfaces.
-- Brand mark (pure logo): `public/brand/offsip-mark.png` + `.svg`; full poster art may stay as `offsip-logo.jpg`.
-- Local drink uploads go to `/public/uploads` (gitignored) — they do **not** appear on Vercel after git push. Production needs Vercel Blob (`BLOB_READ_WRITE_TOKEN`) or re-upload via live `/admin`.
+- Quiet micro-interactions; pink glow sparingly on primary CTAs only.
+- Local drink uploads go to `/public/uploads` (gitignored) — they do **not** appear on Netlify after git push. Production needs Supabase Storage or Vercel Blob.
 - When opening local preview browsers: **only 2 windows** — guest `/` and admin `/admin/orders` (iPhone 16 Pro Max size).
 
 ## Code style
@@ -51,6 +50,7 @@ alwaysApply: true
 - No secrets in client bundles or git; use env vars from `.env.example`.
 - Preserve unrelated code; security-conscious on admin/recipe routes.
 - When product rules or fixed prompts are decided in chat, append them to this rules file.
+- **Production `prisma/schema.prisma` must stay `postgresql`** (mirror of `schema.postgres.prisma`). Local SQLite is only via `scripts/dev-local.mjs` / `schema.local.sqlite.prisma` — never commit SQLite as the main schema.
 
 ## DeepSeek flavor copy
 
@@ -65,8 +65,8 @@ alwaysApply: true
 
 ## Deploy notes
 
-- Target Vercel; Framework Preset = Next.js.
-- Required env: `DATABASE_URL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `DEEPSEEK_API_KEY`.
-- DB: Prisma Postgres (or Neon). When connecting integration, Custom Prefix must be `DATABASE` so the var is `DATABASE_URL` (not `STORAGE_URL`).
+- Target Netlify (or Vercel); Framework Preset = Next.js.
+- Required env: `DATABASE_URL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `DEEPSEEK_API_KEY`, Supabase keys for images.
+- DB: Prisma Postgres (or Neon / Supabase). When connecting integration, Custom Prefix must be `DATABASE` so the var is `DATABASE_URL`.
 - Keep `awesome-cursorrules-main/` local-only (gitignored) as a prompt library.
-- Deploy fill-in checklist lives in `DEPLOY.md` (Prisma Postgres wizard steps).
+- Deploy fill-in checklist lives in `DEPLOY.md`.

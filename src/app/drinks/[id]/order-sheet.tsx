@@ -66,7 +66,7 @@ export function OrderSheet({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 border-t border-[#f0f0f0] pt-5">
+    <form onSubmit={handleSubmit} className="space-y-3 border-t border-hush-plum pt-5">
       <p className="text-sm font-medium">点一杯「{drinkName}」</p>
       <input
         className="field"
@@ -80,7 +80,7 @@ export function OrderSheet({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="h-8 w-8 border border-[#e5e5e5] text-lg"
+            className="h-8 w-8 border border-hush-plum text-lg text-ink"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
           >
             −
@@ -88,7 +88,7 @@ export function OrderSheet({
           <span className="w-6 text-center text-sm">{quantity}</span>
           <button
             type="button"
-            className="h-8 w-8 border border-[#e5e5e5] text-lg"
+            className="h-8 w-8 border border-hush-plum text-lg text-ink"
             onClick={() => setQuantity((q) => Math.min(20, q + 1))}
           >
             +

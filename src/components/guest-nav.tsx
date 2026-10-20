@@ -13,7 +13,7 @@ export function GuestNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#f0f0f0] bg-white/95 backdrop-blur">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-hush-plum/80 bg-[#1a0f24]/95 backdrop-blur">
       <div className="mx-auto flex max-w-md items-stretch justify-around">
         {items.map((item) => {
           const active =
@@ -25,7 +25,9 @@ export function GuestNav() {
               key={item.href}
               href={item.href}
               className={`flex flex-1 flex-col items-center py-3 text-[13px] tracking-wide transition ${
-                active ? "font-semibold text-ink" : "font-normal text-ink-mute"
+                active
+                  ? "font-semibold text-hush-pink"
+                  : "font-normal text-ink-mute"
               }`}
             >
               {item.label}

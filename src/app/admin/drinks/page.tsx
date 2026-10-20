@@ -28,14 +28,14 @@ export default async function AdminDrinksPage() {
 
       <div className="space-y-3">
         {drinks.length === 0 ? (
-          <div className="border border-[#f0f0f0] px-5 py-8 text-center text-sm text-ink-mute">
+          <div className="card-surface px-5 py-8 text-center text-sm text-ink-mute">
             暂无酒品
           </div>
         ) : (
           drinks.map((drink) => (
             <div
               key={drink.id}
-              className="flex items-start justify-between gap-3 border border-[#f0f0f0] p-4"
+              className="flex items-start justify-between gap-3 card-surface p-4"
             >
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg font-medium">{drink.name}</h2>

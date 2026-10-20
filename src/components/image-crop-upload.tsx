@@ -144,7 +144,7 @@ export function ImageCropUpload({
         img.src = crop.src;
       });
 
-      ctx.fillStyle = "#f5f5f5";
+      ctx.fillStyle = "#1e1028";
       ctx.fillRect(0, 0, 800, 800);
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 800, 800);
 
@@ -173,7 +173,7 @@ export function ImageCropUpload({
     <div className="space-y-3">
       <div
         className={`rounded-sm border-2 border-dashed px-4 py-6 text-center text-sm ${
-          draggingFile ? "border-ink bg-sand" : "border-[#ddd] bg-white"
+          draggingFile ? "border-hush-pink bg-sand" : "border-hush-plum bg-[#1e1028]"
         }`}
         onDragOver={(e) => {
           e.preventDefault();
@@ -201,8 +201,8 @@ export function ImageCropUpload({
       </div>
 
       {crop ? (
-        <div className="space-y-3 border border-[#e8e8e8] p-3">
-          <p className="text-sm text-ink-soft">拖动白框取景（不超出照片）</p>
+        <div className="space-y-3 card-surface p-3">
+          <p className="text-sm text-ink-soft">拖动取景框（不超出照片）</p>
           <div
             ref={stageRef}
             className="relative mx-auto h-[320px] w-full overflow-hidden bg-[#111]"
@@ -224,7 +224,7 @@ export function ImageCropUpload({
               }}
             />
             <div
-              className="absolute cursor-move border-[3px] border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
+              className="absolute cursor-move border-[3px] border-hush-pink shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
               style={{
                 left: box.x,
                 top: box.y,
@@ -234,7 +234,7 @@ export function ImageCropUpload({
               onPointerDown={(e) => onBoxPointerDown(e, "move")}
             >
               <div
-                className="absolute bottom-0 right-0 h-5 w-5 cursor-se-resize bg-white"
+                className="absolute bottom-0 right-0 h-5 w-5 cursor-se-resize bg-hush-pink"
                 onPointerDown={(e) => onBoxPointerDown(e, "resize")}
               />
             </div>
@@ -269,7 +269,7 @@ export function ImageCropUpload({
           {urls.map((url, index) => (
             <div
               key={`${url}-${index}`}
-              className="relative border-[3px] border-ink bg-white p-0.5"
+              className="relative border-[3px] border-hush-pink/50 bg-sand p-0.5"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -279,7 +279,7 @@ export function ImageCropUpload({
               />
               <button
                 type="button"
-                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-ink text-[10px] text-white"
+                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-hush-pink text-[10px] text-[#1a0b22]"
                 onClick={() => onChange(urls.filter((_, i) => i !== index))}
               >
                 ×

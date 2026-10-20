@@ -5,15 +5,16 @@ export function TasteMeter({
   label: string;
   value: number;
 }) {
-  const level = Math.min(5, Math.max(1, value));
   return (
-    <div className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-ink-mute">{label}</span>
-      <div className="flex gap-1">
+    <div className="flex items-center gap-2 text-xs text-ink-soft">
+      <span className="w-8 shrink-0">{label}</span>
+      <div className="flex gap-0.5">
         {Array.from({ length: 5 }).map((_, i) => (
           <span
             key={i}
-            className={`h-1.5 w-5 ${i < level ? "bg-ink" : "bg-[#e8e8e8]"}`}
+            className={`h-1.5 w-5 ${
+              i < value ? "bg-hush-pink" : "bg-hush-plum/60"
+            }`}
           />
         ))}
       </div>

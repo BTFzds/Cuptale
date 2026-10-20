@@ -348,7 +348,7 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
 
   return (
     <div className="space-y-5">
-      <section className="border border-[#f0f0f0] bg-white p-5 space-y-3">
+      <section className="card-surface p-5 space-y-3">
         <h2 className="text-base font-medium">AI 识配方</h2>
         <textarea
           className="field min-h-[100px]"
@@ -376,14 +376,14 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
         </button>
 
         {chat.length ? (
-          <div className="space-y-3 border-t border-[#f0f0f0] pt-4">
+          <div className="space-y-3 border-t border-hush-plum pt-4">
             <p className="text-sm text-ink-soft">确认对话</p>
             <div className="max-h-56 space-y-2 overflow-y-auto text-sm">
               {chat.map((m, i) => (
                 <div
                   key={i}
                   className={`rounded-sm px-3 py-2 ${
-                    m.role === "assistant" ? "bg-sand" : "bg-[#f5f5f5]"
+                    m.role === "assistant" ? "bg-sand" : "bg-[#1e1028]"
                   }`}
                 >
                   <span className="text-xs text-ink-mute">
@@ -513,7 +513,7 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
           />
         </label>
 
-        <div className="space-y-3 border-t border-[#f0f0f0] pt-4">
+        <div className="space-y-3 border-t border-hush-plum pt-4">
           <p className="text-sm text-ink-soft">上架参数</p>
           <div className="grid grid-cols-2 gap-3">
             <label className="block space-y-1 text-sm">

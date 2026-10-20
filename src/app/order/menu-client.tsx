@@ -32,12 +32,12 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
 
   return (
     <main className="shell !pb-0">
-      <header className="border-b border-[#f0f0f0] bg-ink px-5 pb-5 pt-6 text-white">
-        <h1 className="text-xl font-semibold tracking-wide">点单</h1>
+      <header className="border-b border-hush-plum px-5 pb-5 pt-6">
+        <h1 className="text-xl font-semibold tracking-[0.2em] text-ink">点单</h1>
       </header>
 
       <div className="flex min-h-[calc(100vh-9.5rem)]">
-        <aside className="w-[88px] shrink-0 bg-[#f7f7f7]">
+        <aside className="w-[88px] shrink-0 bg-[#1a0f24]">
           {categories.map((cat) => {
             const selected = cat === active;
             return (
@@ -47,12 +47,12 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
                 onClick={() => setActive(cat)}
                 className={`relative block w-full px-2 py-4 text-center text-xs leading-tight ${
                   selected
-                    ? "bg-white font-semibold text-ink"
-                    : "text-ink-soft"
+                    ? "bg-sand font-semibold text-hush-pink"
+                    : "text-ink-mute"
                 }`}
               >
                 {selected ? (
-                  <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 bg-ink" />
+                  <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 bg-hush-pink" />
                 ) : null}
                 {cat}
               </button>
@@ -75,12 +75,12 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
               {filtered.map((drink) => (
                 <li
                   key={drink.id}
-                  className={`border-b border-[#f5f5f5] px-4 py-4 ${
+                  className={`border-b border-hush-plum/50 px-4 py-4 ${
                     drink.isAvailable ? "" : "opacity-45 grayscale"
                   }`}
                 >
                   <div className="flex gap-3">
-                    <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden border-[2.5px] border-ink bg-sand">
+                    <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden border-[2.5px] border-hush-pink/45 bg-sand">
                       {drink.imageUrl ? (
                         <Image
                           src={drink.imageUrl}
@@ -95,14 +95,14 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
                         </div>
                       )}
                       {!drink.isAvailable ? (
-                        <span className="absolute left-1 top-1 rounded-sm bg-black/55 px-1.5 py-0.5 text-[9px] text-white">
+                        <span className="absolute left-1 top-1 rounded-sm bg-black/55 px-1.5 py-0.5 text-[9px] text-ink">
                           售罄
                         </span>
                       ) : null}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-[15px] font-medium leading-snug">
+                      <h3 className="text-[15px] font-medium leading-snug text-ink">
                         {drink.name}
                       </h3>
                       <div className="mt-1.5 flex flex-wrap gap-1">
@@ -127,12 +127,12 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
                         {drink.isAvailable ? (
                           <Link
                             href={`/drinks/${drink.id}`}
-                            className="rounded-sm bg-ink px-3 py-1.5 text-xs text-white"
+                            className="rounded-sm bg-hush-pink px-3 py-1.5 text-xs text-[#1a0b22]"
                           >
                             选规格
                           </Link>
                         ) : (
-                          <span className="rounded-sm bg-[#ddd] px-3 py-1.5 text-xs text-white">
+                          <span className="rounded-sm bg-hush-plum px-3 py-1.5 text-xs text-ink-mute">
                             售罄
                           </span>
                         )}

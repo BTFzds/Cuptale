@@ -1,6 +1,6 @@
-# 杯叙 CupTale · 息盏 OffSip
+# 杯叙 CupTale · HUSH
 
-家庭私人调酒点单与配方管理系统。移动端优先，分享链接即可点单；管理员经 `/admin` 管理酒品、订单与私人配方库。
+家庭私人调酒点单与配方管理系统（品牌 **HUSH**）。移动端优先，分享链接即可点单；管理员经 `/admin` 管理酒品、订单与私人配方库。
 
 ## 本地启动
 
@@ -47,7 +47,7 @@ npm run dev
 
 ## 品牌资源
 
-Logo：`public/brand/offsip-logo.jpg`（已去除水印的息盏 OffSip 标识）
+Logo：`public/brand/hush-logo.jpg`（HUSH 标识）
 
 ## Cursor 规则
 

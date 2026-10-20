@@ -117,18 +117,18 @@ export default function MyOrdersPage() {
       <section className="mt-6 px-5">
         <h2 className="mb-3 text-[15px] font-semibold">我点过的</h2>
         {orderedDrinks.length === 0 ? (
-          <p className="border border-[#f0f0f0] px-4 py-8 text-center text-sm text-ink-mute">
+          <p className="card-surface px-4 py-8 text-center text-sm text-ink-mute">
             还没有点过
           </p>
         ) : (
-          <ul className="divide-y divide-[#f0f0f0] border border-[#f0f0f0]">
+          <ul className="divide-y divide-hush-plum/60 card-surface">
             {orderedDrinks.map((item) => (
               <li key={item.drinkId}>
                 <Link
                   href={`/drinks/${item.drinkId}`}
                   className="flex items-center gap-3 px-4 py-3"
                 >
-                  <div className="relative h-12 w-12 shrink-0 overflow-hidden border-[2px] border-ink bg-sand">
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden border-[2px] border-hush-pink/40 bg-sand">
                     {item.drinkImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -156,14 +156,14 @@ export default function MyOrdersPage() {
         ) : error ? (
           <p className="text-sm text-red-600">{error}</p>
         ) : orders.length === 0 ? (
-          <div className="border border-[#f0f0f0] px-4 py-10 text-center">
+          <div className="card-surface px-4 py-10 text-center">
             <p className="text-sm text-ink-mute">暂无订单</p>
             <Link href="/order" className="btn-primary mt-4 inline-flex">
               去点单
             </Link>
           </div>
         ) : (
-          <div className="divide-y divide-[#f0f0f0] border border-[#f0f0f0]">
+          <div className="divide-y divide-hush-plum/60 card-surface">
             {orders.map((order) => (
               <article key={order.id} className="px-4 py-4">
                 <div className="flex items-start justify-between gap-3">

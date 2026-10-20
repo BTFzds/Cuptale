@@ -10,23 +10,33 @@ const config: Config = {
     extend: {
       colors: {
         ink: {
-          DEFAULT: "#1a1a1a",
-          soft: "#666666",
-          mute: "#999999",
+          DEFAULT: "#F7E9F4",
+          soft: "#CDB0D8",
+          mute: "#8F6F9E",
         },
         sand: {
-          DEFAULT: "#f7f5f2",
-          deep: "#ebe7e1",
-          card: "#ffffff",
+          DEFAULT: "#2A1638",
+          deep: "#1E1028",
+          card: "#341C44",
         },
         clay: {
-          DEFAULT: "#a89880",
-          soft: "#c4b6a0",
+          DEFAULT: "#FF6EC7",
+          soft: "#FF9ADB",
+        },
+        hush: {
+          bg: "#160C1F",
+          panel: "#241430",
+          pink: "#FF6EC7",
+          glow: "#FFB3E4",
+          plum: "#4B2A62",
         },
       },
       fontFamily: {
         display: ["var(--font-display)", "Songti SC", "serif"],
         sans: ["var(--font-sans)", "PingFang SC", "Microsoft YaHei", "sans-serif"],
+      },
+      boxShadow: {
+        hush: "0 0 24px rgba(255, 110, 199, 0.22)",
       },
     },
   },

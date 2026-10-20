@@ -15,11 +15,11 @@ const display = Noto_Serif_SC({
 });
 
 export const metadata: Metadata = {
-  title: "下班吧",
-  description: "到点就喝一杯",
+  title: "HUSH",
+  description: "轻声一杯",
   icons: {
-    icon: [{ url: "/brand/afterwork-mark.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/brand/afterwork-mark.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/brand/hush-logo.jpg", type: "image/jpeg" }],
+    apple: [{ url: "/brand/hush-logo.jpg", type: "image/jpeg" }],
   },
 };
 
