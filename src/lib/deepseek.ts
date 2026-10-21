@@ -10,6 +10,32 @@ const FLAVOR_SYSTEM_PROMPT = `你是「HUSH」家庭调酒吧的文案师。根�
 4. 不要标题、不要列表、不要引号包裹全文、不要表情符号。
 5. 只输出风味正文本身。`;
 
+function getClient() {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (!apiKey) throw new Error("未配置 DEEPSEEK_API_KEY");
+  return new OpenAI({
+    apiKey,
+    baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com",
+  });
+}
+
+async function completeFlavor(
+  client: OpenAI,
+  model: string,
+  userContent: string | OpenAI.Chat.Completions.ChatCompletionContentPart[],
+) {
+  const completion = await client.chat.completions.create({
+    model,
+    messages: [
+      { role: "system", content: FLAVOR_SYSTEM_PROMPT },
+      { role: "user", content: userContent },
+    ],
+    temperature: 0.85,
+    max_tokens: 400,
+  });
+  return completion.choices[0]?.message?.content?.trim() || "";
+}
+
 export async function generateFlavorText(input: {
   drinkName: string;
   recipeName?: string;
@@ -18,15 +44,10 @@ export async function generateFlavorText(input: {
   tasteHints?: string;
   imageUrls?: string[];
 }) {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) {
-    throw new Error("未配置 DEEPSEEK_API_KEY");
-  }
-
-  const client = new OpenAI({
-    apiKey,
-    baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com",
-  });
+  const client = getClient();
+  const textModel = process.env.DEEPSEEK_MODEL || "deepseek-flash";
+  const visionModel =
+    process.env.DEEPSEEK_MODEL_VISION || process.env.DEEPSEEK_MODEL || textModel;
 
   const userText = [
     `酒名：${input.drinkName}`,
@@ -36,41 +57,30 @@ export async function generateFlavorText(input: {
       : "",
     input.steps ? `制作步骤参考（勿外泄）：${input.steps}` : "",
     input.tasteHints ? `口味标签：${input.tasteHints}` : "",
-    "请结合照片里的颜色、杯型观感写介绍，仍不要点名原料。",
+    "请写对外风味介绍，不要点名原料。",
   ]
     .filter(Boolean)
     .join("\n");
 
-  const images = await resolveImagesForVision(input.imageUrls || [], 2);
-  const useVision = images.length > 0;
-  const model = useVision
-    ? process.env.DEEPSEEK_MODEL_VISION ||
-      process.env.DEEPSEEK_MODEL ||
-      "deepseek-flash"
-    : process.env.DEEPSEEK_MODEL || "deepseek-flash";
+  // 先纯文本（稳定）；识图仅作增强，失败则回退
+  let text = await completeFlavor(client, textModel, userText);
+  if (text) return text;
 
-  const content: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [
-    { type: "text", text: userText },
-    ...images.map((url) => ({
-      type: "image_url" as const,
-      image_url: { url },
-    })),
-  ];
+  const images = await resolveImagesForVision(input.imageUrls || [], 1);
+  if (images.length) {
+    text = await completeFlavor(client, visionModel, [
+      { type: "text", text: userText + "\n请结合照片颜色与气质。" },
+      { type: "image_url", image_url: { url: images[0] } },
+    ]);
+    if (text) return text;
+  }
 
-  const completion = await client.chat.completions.create({
-    model,
-    messages: [
-      { role: "system", content: FLAVOR_SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: useVision ? content : userText,
-      },
-    ],
-    temperature: 0.9,
-    max_tokens: 300,
-  });
-
-  const text = completion.choices[0]?.message?.content?.trim();
+  // 最后兜底：再试一次更短提示
+  text = await completeFlavor(
+    client,
+    textModel,
+    `酒名「${input.drinkName}」。写 2–3 句中文风味介绍，不要原料名。`,
+  );
   if (!text) throw new Error("DeepSeek 未返回内容");
   return text;
 }

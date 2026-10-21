@@ -9,20 +9,17 @@ import {
 } from "@/lib/menu-table";
 
 const SYSTEM = `你是「HUSH」家庭调酒吧的菜单统筹助手。
-用户会给出菜单表格片段（JSON 数组）和修改指令。
-你必须只输出一个 JSON 对象，形状严格为：{"rows":[...]} 
-其中 rows 与输入行一一对应，字段：
-recipeId, drinkId, name, category, sweetness, acidity, strength, abvApprox, glassType, isPublished, isAvailable, flavorText, ingredientsSummary, imageUrl。
+用户给出菜单表格片段与指令。只输出 JSON 对象：{"rows":[...]}，与输入行一一对应。
+
+字段：recipeId, drinkId, name, category, sweetness, acidity, strength, abvApprox, glassType, isPublished, isAvailable, isNonAlcoholic, hasDairy, hasCaffeine, hasTea, hasSparkling, flavorText, ingredientsSummary, imageUrl, salesCount。
 
 规则：
-1. category 只能是 ${DRINK_CATEGORIES.join("/")} 之一。
-2. sweetness/acidity/strength 为 1–5 整数。
-3. 酒类按市面最常见牌子估算 abvApprox（%）；无烈酒则为 0 或 null。
-4. glassType 只能是：${GLASS_TYPES_PROMPT}（本接口无图时不要乱改杯型，保持原值）。
-5. 按酒含量重算时结合 ingredientsSummary。
-6. 不要删行、不要改 recipeId/drinkId/imageUrl；ingredientsSummary 保持原样。
-7. flavorText 不要写原料名与毫升。
-8. 不要输出 markdown 代码围栏，不要其它说明文字。`;
+1. category 只能是 ${DRINK_CATEGORIES.join("/")}（经典=烈酒为主；果汁/碳酸/奶制=对应主原料）。
+2. sweetness/acidity/strength 为 1–5；估算酒精度时参考 glassType 里的 ml 杯容（加满≈杯容−已知毫升）。
+3. glassType 只能是：${GLASS_TYPES_PROMPT}（无图指令时尽量保持原杯型）。
+4. 标签布尔：hasDairy 含奶、hasCaffeine 含咖啡因、hasTea 含茶、hasSparkling 含气泡、isNonAlcoholic 无酒精；按原料判断。
+5. 不要改 recipeId/drinkId/imageUrl/salesCount；ingredientsSummary 保持原样。
+6. flavorText 不要写原料名与毫升。不要 markdown 围栏。`;
 
 function getClient() {
   const apiKey = process.env.DEEPSEEK_API_KEY;
@@ -38,7 +35,6 @@ function extractRowsPayload(text: string): unknown[] {
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
   const raw = fenced ? fenced[1].trim() : trimmed;
 
-  // {"rows":[...]}
   try {
     const objStart = raw.indexOf("{");
     const objEnd = raw.lastIndexOf("}");
@@ -52,7 +48,6 @@ function extractRowsPayload(text: string): unknown[] {
     // continue
   }
 
-  // bare array
   const start = raw.indexOf("[");
   const end = raw.lastIndexOf("]");
   if (start >= 0 && end > start) {
@@ -64,7 +59,6 @@ function extractRowsPayload(text: string): unknown[] {
 }
 
 function slimRow(row: MenuTableRow) {
-  // 缩短发给模型的体积，降低截断概率
   return {
     recipeId: row.recipeId,
     drinkId: row.drinkId,
@@ -77,12 +71,20 @@ function slimRow(row: MenuTableRow) {
     glassType: row.glassType,
     isPublished: row.isPublished,
     isAvailable: row.isAvailable,
-    flavorText: row.flavorText.slice(0, 80),
-    ingredientsSummary: row.ingredientsSummary.slice(0, 120),
+    isNonAlcoholic: row.isNonAlcoholic,
+    hasDairy: row.hasDairy,
+    hasCaffeine: row.hasCaffeine,
+    hasTea: row.hasTea,
+    hasSparkling: row.hasSparkling,
+    flavorText: row.flavorText.slice(0, 60),
+    ingredientsSummary: row.ingredientsSummary.slice(0, 140),
   };
 }
 
 function mergeRow(base: MenuTableRow, patch: Record<string, unknown>): MenuTableRow {
+  const bool = (v: unknown, d: boolean) =>
+    v === undefined ? d : Boolean(v);
+
   return {
     ...base,
     name: String(patch.name ?? base.name).trim() || base.name,
@@ -99,15 +101,17 @@ function mergeRow(base: MenuTableRow, patch: Record<string, unknown>): MenuTable
     glassType: normalizeGlassType(
       String(patch.glassType ?? base.glassType) || base.glassType,
     ),
-    isPublished: Boolean(
-      patch.isPublished === undefined ? base.isPublished : patch.isPublished,
-    ),
-    isAvailable: Boolean(
-      patch.isAvailable === undefined ? base.isAvailable : patch.isAvailable,
-    ),
+    isPublished: bool(patch.isPublished, base.isPublished),
+    isAvailable: bool(patch.isAvailable, base.isAvailable),
+    isNonAlcoholic: bool(patch.isNonAlcoholic, base.isNonAlcoholic),
+    hasDairy: bool(patch.hasDairy, base.hasDairy),
+    hasCaffeine: bool(patch.hasCaffeine, base.hasCaffeine),
+    hasTea: bool(patch.hasTea, base.hasTea),
+    hasSparkling: bool(patch.hasSparkling, base.hasSparkling),
     flavorText: String(patch.flavorText ?? base.flavorText),
     ingredientsSummary: base.ingredientsSummary,
     imageUrl: base.imageUrl,
+    salesCount: base.salesCount,
   };
 }
 
@@ -122,11 +126,11 @@ async function editChunk(
       { role: "system", content: SYSTEM },
       {
         role: "user",
-        content: `指令：${instruction}\n\n表格片段 JSON：\n${JSON.stringify(rows.map(slimRow))}\n\n请只输出 {"rows":[...]}`,
+        content: `指令：${instruction}\n\n表格片段：\n${JSON.stringify(rows.map(slimRow))}\n\n只输出 {"rows":[...]}`,
       },
     ],
     temperature: 0.2,
-    max_tokens: 3500,
+    max_tokens: 4000,
   });
 
   const text = completion.choices[0]?.message?.content?.trim();
@@ -156,25 +160,22 @@ export async function editMenuTableWithAi(input: {
 
   const client = getClient();
   if (!client) {
-    if (/重算|甜度|酸度|烈度|酒精度|分类|abv/i.test(instruction)) {
+    if (/重算|甜度|酸度|烈度|酒精度|分类|标签|含奶|咖啡|abv/i.test(instruction)) {
       return input.rows.map(heuristicRecalcRow);
     }
     return input.rows;
   }
 
-  // 分块，避免一次返回过长被截断 → 「未返回数组」
   const chunkSize = 4;
   const out: MenuTableRow[] = [];
   try {
     for (let i = 0; i < input.rows.length; i += chunkSize) {
       const chunk = input.rows.slice(i, i + chunkSize);
-      const edited = await editChunk(client, chunk, instruction);
-      out.push(...edited);
+      out.push(...(await editChunk(client, chunk, instruction)));
     }
     return out;
   } catch (err) {
-    // 解析失败时：重算类指令走本地启发，避免整页报错
-    if (/重算|甜度|酸度|烈度|酒精度|分类|abv/i.test(instruction)) {
+    if (/重算|甜度|酸度|烈度|酒精度|分类|标签|含奶|咖啡|abv/i.test(instruction)) {
       return input.rows.map(heuristicRecalcRow);
     }
     throw err instanceof Error ? err : new Error("AI 改表失败");

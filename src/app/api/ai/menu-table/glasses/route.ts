@@ -16,25 +16,37 @@ const rowSchema = z.object({
   glassType: z.string(),
   isPublished: z.boolean(),
   isAvailable: z.boolean(),
+  isNonAlcoholic: z.boolean().optional().default(false),
+  hasDairy: z.boolean().optional().default(false),
+  hasCaffeine: z.boolean().optional().default(false),
+  hasTea: z.boolean().optional().default(false),
+  hasSparkling: z.boolean().optional().default(false),
   flavorText: z.string(),
   ingredientsSummary: z.string(),
   imageUrl: z.string().nullable().optional().default(null),
-});
-
-const schema = z.object({
-  rows: z.array(rowSchema).min(1),
+  salesCount: z.number().optional().default(0),
 });
 
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
-    const body = schema.parse(await request.json());
-    const withImages = body.rows.filter((r) => r.imageUrl);
-    if (!withImages.length) {
-      return jsonError("没有可识别的成片，请先在菜单里给酒品上传封面图");
+    const body = z.object({ rows: z.array(rowSchema).min(1) }).parse(
+      await request.json(),
+    );
+    if (!body.rows.some((r) => r.imageUrl)) {
+      return jsonError("没有可识别的成片，请先上传封面图");
     }
     const result = await batchDetectGlasses(
-      body.rows.map((r) => ({ ...r, imageUrl: r.imageUrl ?? null })),
+      body.rows.map((r) => ({
+        ...r,
+        imageUrl: r.imageUrl ?? null,
+        isNonAlcoholic: r.isNonAlcoholic,
+        hasDairy: r.hasDairy,
+        hasCaffeine: r.hasCaffeine,
+        hasTea: r.hasTea,
+        hasSparkling: r.hasSparkling,
+        salesCount: r.salesCount ?? 0,
+      })),
     );
     return jsonOk(result);
   } catch (error) {

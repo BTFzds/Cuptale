@@ -53,11 +53,21 @@ export default async function DrinkDetailPage({
           {drink.tagline ? (
             <p className="mt-1 text-xs text-ink-mute">{drink.tagline}</p>
           ) : null}
-          {drink.isNonAlcoholic ? (
-            <p className="mt-2">
-              <span className="tag">无酒精</span>
-            </p>
-          ) : null}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {[
+              drink.hasDairy && "含奶",
+              drink.hasCaffeine && "含咖啡因",
+              drink.hasTea && "含茶",
+              drink.hasSparkling && "含气泡",
+              drink.isNonAlcoholic && "无酒精",
+            ]
+              .filter(Boolean)
+              .map((t) => (
+                <span key={String(t)} className="tag">
+                  {t}
+                </span>
+              ))}
+          </div>
           <p className="mt-3 text-sm leading-7 text-ink-soft">
             {drink.flavorText.trim() ||
               drink.recipe?.flavorText.trim() ||
@@ -70,25 +80,6 @@ export default async function DrinkDetailPage({
           <TasteMeter label="酸度" value={drink.acidity} />
           <TasteMeter label="烈度" value={drink.strength} />
         </div>
-
-        <dl className="grid grid-cols-2 gap-2 text-sm">
-          <div className="bg-sand px-3 py-3">
-            <dt className="text-xs text-ink-mute">酒精度约</dt>
-            <dd className="mt-1">{drink.abvApprox != null ? `${drink.abvApprox}%` : "未标注"}</dd>
-          </div>
-          <div className="bg-sand px-3 py-3">
-            <dt className="text-xs text-ink-mute">杯型</dt>
-            <dd className="mt-1">{drink.glassType}</dd>
-          </div>
-          <div className="bg-sand px-3 py-3">
-            <dt className="text-xs text-ink-mute">含奶</dt>
-            <dd className="mt-1">{drink.hasDairy ? "是" : "否"}</dd>
-          </div>
-          <div className="bg-sand px-3 py-3">
-            <dt className="text-xs text-ink-mute">含咖啡因</dt>
-            <dd className="mt-1">{drink.hasCaffeine ? "是" : "否"}</dd>
-          </div>
-        </dl>
 
         {drink.allergens ? (
           <p className="text-xs text-ink-mute">过敏提示：{drink.allergens}</p>

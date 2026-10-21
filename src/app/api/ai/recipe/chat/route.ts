@@ -21,6 +21,8 @@ const tasteSchema = z.object({
   isNonAlcoholic: z.boolean(),
   hasDairy: z.boolean(),
   hasCaffeine: z.boolean(),
+  hasTea: z.boolean().optional().default(false),
+  hasSparkling: z.boolean().optional().default(false),
   allergens: z.string(),
   flavorText: z.string(),
 });

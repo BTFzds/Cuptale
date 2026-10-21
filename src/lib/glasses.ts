@@ -20,7 +20,14 @@ export const DEFAULT_GLASS_TYPE: GlassType = "高球杯 300ml";
 
 export const GLASS_TYPES_PROMPT = GLASS_TYPES.join(" / ");
 
-/** 把自由文本归一到平台杯型；认不出则保留原文或默认 */
+/** 从杯型文案解析容量 ml */
+export function glassCapacityMl(glassType: string | null | undefined): number {
+  const m = String(glassType || "").match(/(\d+)\s*ml/i);
+  if (m) return Number(m[1]);
+  return 300;
+}
+
+/** 把自由文本归一到平台杯型 */
 export function normalizeGlassType(raw: string | null | undefined): string {
   const s = String(raw || "").trim();
   if (!s) return DEFAULT_GLASS_TYPE;
@@ -40,11 +47,11 @@ export function normalizeGlassType(raw: string | null | undefined): string {
     [/厚底/i, "厚底杯 300ml"],
     [/经典果汁|340/i, "经典果汁杯 340ml"],
     [/果汁杯|308/i, "果汁杯 308ml"],
-    [/高球|collins|collins|直筒高/i, "高球杯 300ml"],
+    [/高球|collins|直筒高/i, "高球杯 300ml"],
     [/岩石杯/i, "爵士威士忌杯 300ml"],
   ];
   for (const [re, glass] of rules) {
     if (re.test(s) || re.test(lower)) return glass;
   }
-  return s;
+  return DEFAULT_GLASS_TYPE;
 }

@@ -25,6 +25,8 @@ interface DrinkForm {
   isNonAlcoholic: boolean;
   hasDairy: boolean;
   hasCaffeine: boolean;
+  hasTea: boolean;
+  hasSparkling: boolean;
   allergens: string;
   isPublished: boolean;
   isAvailable: boolean;
@@ -46,6 +48,8 @@ const emptyForm: DrinkForm = {
   isNonAlcoholic: false,
   hasDairy: false,
   hasCaffeine: false,
+  hasTea: false,
+  hasSparkling: false,
   allergens: "",
   isPublished: true,
   isAvailable: true,
@@ -91,6 +95,8 @@ export function DrinkEditor({ drinkId }: { drinkId?: string }) {
           isNonAlcoholic: !!d.isNonAlcoholic,
           hasDairy: !!d.hasDairy,
           hasCaffeine: !!d.hasCaffeine,
+          hasTea: !!d.hasTea,
+          hasSparkling: !!d.hasSparkling,
           allergens: d.allergens || "",
           isPublished: !!d.isPublished,
           isAvailable: d.isAvailable !== false,
@@ -155,6 +161,8 @@ export function DrinkEditor({ drinkId }: { drinkId?: string }) {
         isNonAlcoholic: form.isNonAlcoholic,
         hasDairy: form.hasDairy,
         hasCaffeine: form.hasCaffeine,
+        hasTea: form.hasTea,
+        hasSparkling: form.hasSparkling,
         allergens: form.allergens,
         isPublished: form.isPublished,
         isAvailable: form.isAvailable,
@@ -311,30 +319,24 @@ export function DrinkEditor({ drinkId }: { drinkId?: string }) {
               />
             </label>
             <div className="flex flex-wrap gap-4 text-sm">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={form.isNonAlcoholic}
-                  onChange={(e) => patch("isNonAlcoholic", e.target.checked)}
-                />
-                无酒精
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={form.hasDairy}
-                  onChange={(e) => patch("hasDairy", e.target.checked)}
-                />
-                含奶
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={form.hasCaffeine}
-                  onChange={(e) => patch("hasCaffeine", e.target.checked)}
-                />
-                含咖啡因
-              </label>
+              {(
+                [
+                  ["hasDairy", "含奶"],
+                  ["hasCaffeine", "含咖啡因"],
+                  ["hasTea", "含茶"],
+                  ["hasSparkling", "含气泡"],
+                  ["isNonAlcoholic", "无酒精"],
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form[key]}
+                    onChange={(e) => patch(key, e.target.checked)}
+                  />
+                  {label}
+                </label>
+              ))}
             </div>
           </div>
         ) : null}

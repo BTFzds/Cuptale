@@ -12,6 +12,7 @@ export function guestFlavorText(
 /** Public drink shape — never includes recipe internals */
 export function toPublicDrink(
   drink: Drink & { recipe?: { flavorText: string } | null },
+  extras?: { salesCount?: number },
 ) {
   return {
     id: drink.id,
@@ -27,9 +28,12 @@ export function toPublicDrink(
     glassType: drink.glassType,
     hasDairy: drink.hasDairy,
     hasCaffeine: drink.hasCaffeine,
+    hasTea: drink.hasTea,
+    hasSparkling: drink.hasSparkling,
     allergens: drink.allergens,
     isNonAlcoholic: drink.isNonAlcoholic,
     isAvailable: drink.isAvailable,
+    salesCount: extras?.salesCount ?? 0,
   };
 }
 

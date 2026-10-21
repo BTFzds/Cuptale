@@ -33,10 +33,12 @@ model Drink {
   acidity        Int      @default(3)
   strength       Int      @default(3)
   abvApprox      Float?
-  glassType      String   @default("岩石杯")
+  glassType      String   @default("高球杯 300ml")
   isNonAlcoholic Boolean  @default(false)
   hasDairy       Boolean  @default(false)
   hasCaffeine    Boolean  @default(false)
+  hasTea         Boolean  @default(false)
+  hasSparkling   Boolean  @default(false)
   allergens   String   @default("")
   isPublished Boolean  @default(false)
   isAvailable Boolean  @default(true)

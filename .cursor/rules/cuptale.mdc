@@ -19,14 +19,15 @@ alwaysApply: true
 ## Product boundaries (hard)
 
 - **Guest never sees recipes**: ingredients, ml, steps, recipe notes must not appear in public pages or public API JSON.
-- Drink public DTO may include: name, image, flavorText, taste tags (sweetness/acidity/strength/abv/glass/dairy/caffeine/allergens), availability flags.
+- Drink public DTO may include: name, image, flavorText, taste meters, glass, guest tags (含奶/含咖啡因/含茶/含气泡/无酒精), salesCount, availability flags. Guests must **not** see ABV as a list tag.
 - Admin lives under `/admin` with **no password** (open gate); do **not** link it from guest navigation.
 - Guest public APIs must never return recipes; use `?admin=1` / `scope=admin` only for admin UI fetches.
 - Drink (menu) and Recipe (private notebook) are separate; a drink may publish without a recipe.
 - Recipe notebook flow: paste rough notes + photos → AI parse/chat（顺序与手法）→ save private recipe → later add photos → **上架为酒品**（copies taste tags + flavorText; guests still never see recipe internals）.
 - Admin nav: **订单** + **菜单** + **信息管理**. 菜单 = recipe notebook list (AI ingest); each row toggles 上架/下架（`isPublished`，下架前台不显示）and 售罄/供应（`isAvailable`，售罄灰显）. 新增 always goes to recipe/AI flow（先图后文再识别）. 信息管理 = 表格统筹改口味/状态，支持 AI 批量改表.
 - Recipe AI: steps must be numbered `1. 2. 3.`; ABV from common-brand assumptions; chat/parse must pass vision images (resolve `/uploads` to data URLs).
-- One recipe ↔ at most one drink (`Drink.recipeId` unique). Guest menu dedupes by recipeId/name. Guest tags: ABV / 含奶 / 含咖啡因 only（不展示杯型）. Glass options live in `src/lib/glasses.ts` for AI + admin selects.
+- One recipe ↔ at most one drink (`Drink.recipeId` unique). Guest menu dedupes by recipeId/name.
+- Menu categories: **经典 / 果汁 / 碳酸 / 奶制**（经典=烈酒为主；其余按主原料）. Guest order = Heytea dual-scroll（左分类独立滚 + 右列表分段；点左跳右；默认全部）. Guest tags only: 含奶 / 含咖啡因 / 含茶 / 含气泡 / 无酒精（fields on every drink; show when true）. Sales = completed order quantity sum. Glass options + capacity in `src/lib/glasses.ts`; ABV/taste AI may use cup ml. Info 管理 AI can batch-set categories + tags.
 - Order workflow: tap order → preview sheet (image + ingredient summary) → 开始制作 → `/admin/orders/[id]` shows private recipe and sets status `making` → 制作完毕 → `done` and back to orders.
 - Netlify image upload needs Supabase Storage env; empty tables alone are not the upload failure cause（serverless 不能写本地 `public/uploads`）.
 - Unavailable drinks: greyed out, not hidden; not orderable.
@@ -35,7 +36,7 @@ alwaysApply: true
 ## UX / brand
 
 - Brand name: **HUSH**; mark at `public/brand/hush-logo.jpg`（无副标题标语）.
-- Mobile-first; guest IA: 首页 / 点单 / 我的; order page uses left category + right list.
+- Mobile-first; guest IA: 首页 / 点单 / 我的; order page = left category rail + right sectioned list (independent scroll).
 - Visual: dark plum background (`#160C1F`), pink accent (`#FF6EC7`), soft lavender text; neon-bar calm, not dashboard clutter.
 - Flow: home → order menu → drink detail → submit → my orders.
 - Chinese UI copy: short and plain; avoid marketing fluff / “AI 文案感”.

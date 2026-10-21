@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DRINK_CATEGORIES } from "@/lib/categories";
 import { DEFAULT_GLASS_TYPE, GLASS_TYPES } from "@/lib/glasses";
 import type { MenuTableRow } from "@/lib/menu-table";
@@ -11,13 +11,15 @@ function shortId(row: MenuTableRow) {
 }
 
 export function AdminInfoTable() {
+  const fileRef = useRef<HTMLInputElement | null>(null);
   const [rows, setRows] = useState<MenuTableRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [glassBusy, setGlassBusy] = useState(false);
+  const [ioBusy, setIoBusy] = useState(false);
   const [instruction, setInstruction] = useState(
-    "按各配方酒含量与原料，重算甜度、酸度、烈度、酒精度和分类",
+    "按各配方酒含量、原料与杯型容量，重算甜度、酸度、烈度、酒精度和分类（经典/果汁/碳酸/奶制）；并统一标注标签：含奶、含咖啡因、含茶、含气泡、无酒精",
   );
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -119,12 +121,105 @@ export function AdminInfoTable() {
     }
   }
 
+  async function handleExport() {
+    setIoBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const res = await fetch("/api/admin/menu-table/export");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "导出失败");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        res.headers
+          .get("Content-Disposition")
+          ?.match(/filename="(.+)"/)?.[1] || "hush-menu.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      setMessage(`已导出 ${rows.length} 行（Excel 可直接打开）`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "导出失败");
+    } finally {
+      setIoBusy(false);
+    }
+  }
+
+  async function handleImportFile(file: File) {
+    setIoBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/admin/menu-table/import", {
+        method: "POST",
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "导入失败");
+      setRows(data.rows || rows);
+      setMessage(
+        `已导入：更新 ${data.matched ?? 0}，新增 ${data.added ?? 0}` +
+          (data.skipped ? `，跳过 ${data.skipped}` : "") +
+          "；请核对后点保存",
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "导入失败");
+    } finally {
+      setIoBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  const busy = saving || aiBusy || glassBusy || ioBusy;
+
   if (loading) {
     return <p className="text-sm text-ink-mute">加载中…</p>;
   }
 
   return (
     <div className="space-y-4">
+      <section className="card-surface space-y-3 p-4">
+        <p className="text-sm text-ink-soft">表格导入 / 导出</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn-outline"
+            disabled={busy || !rows.length}
+            onClick={handleExport}
+          >
+            {ioBusy ? "处理中…" : "导出 CSV"}
+          </button>
+          <button
+            type="button"
+            className="btn-outline"
+            disabled={busy}
+            onClick={() => fileRef.current?.click()}
+          >
+            导入 CSV
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void handleImportFile(f);
+            }}
+          />
+        </div>
+        <p className="text-[10px] text-ink-mute">
+          导出含酒名、分类、杯型、甜酸烈、酒精度、上下架、标签与风味等；用 Excel
+          改完再导入。匹配优先「酒品ID / 配方ID」，其次酒名。销量只读不覆盖。导入后请点保存。
+        </p>
+      </section>
+
       <section className="card-surface space-y-3 p-4">
         <p className="text-sm text-ink-soft">AI 改表</p>
         <textarea
@@ -137,7 +232,7 @@ export function AdminInfoTable() {
           <button
             type="button"
             className="btn-primary"
-            disabled={aiBusy || glassBusy || !rows.length}
+            disabled={busy || !rows.length}
             onClick={handleAi}
           >
             {aiBusy ? "处理中…" : "AI 应用到表格"}
@@ -145,7 +240,7 @@ export function AdminInfoTable() {
           <button
             type="button"
             className="btn-outline"
-            disabled={aiBusy || glassBusy || !rows.length}
+            disabled={busy || !rows.length}
             onClick={handleBatchGlasses}
           >
             {glassBusy ? "识杯中…" : "批量识杯型"}
@@ -153,7 +248,7 @@ export function AdminInfoTable() {
           <button
             type="button"
             className="btn-ghost"
-            disabled={saving || aiBusy || glassBusy || !rows.length}
+            disabled={busy || !rows.length}
             onClick={handleSave}
           >
             {saving ? "保存中…" : "保存全部"}
@@ -319,6 +414,33 @@ export function AdminInfoTable() {
                     }
                   />
                 </label>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 text-xs text-ink-soft">
+                <span className="text-[10px] text-ink-mute">标签</span>
+                {(
+                  [
+                    ["hasDairy", "含奶"],
+                    ["hasCaffeine", "含咖啡因"],
+                    ["hasTea", "含茶"],
+                    ["hasSparkling", "含气泡"],
+                    ["isNonAlcoholic", "无酒精"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key} className="inline-flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={row[key]}
+                      onChange={(e) =>
+                        patchRow(i, { [key]: e.target.checked })
+                      }
+                    />
+                    {label}
+                  </label>
+                ))}
+                <span className="ml-auto text-[10px] text-ink-mute">
+                  销量 {row.salesCount}
+                </span>
               </div>
 
               {row.ingredientsSummary ? (

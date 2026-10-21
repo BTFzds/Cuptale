@@ -6,6 +6,7 @@ import { DRINK_CATEGORIES } from "@/lib/categories";
 import {
   DEFAULT_GLASS_TYPE,
   GLASS_TYPES_PROMPT,
+  glassCapacityMl,
   normalizeGlassType,
 } from "@/lib/glasses";
 
@@ -20,6 +21,8 @@ export type RecipeTasteDraft = {
   isNonAlcoholic: boolean;
   hasDairy: boolean;
   hasCaffeine: boolean;
+  hasTea: boolean;
+  hasSparkling: boolean;
   allergens: string;
   flavorText: string;
 };
@@ -65,6 +68,8 @@ JSON 形状：
     "isNonAlcoholic":false,
     "hasDairy":false,
     "hasCaffeine":false,
+    "hasTea":false,
+    "hasSparkling":false,
     "allergens":"",
     "flavorText":"对外文案"
   },
@@ -129,7 +134,7 @@ export function heuristicParseRecipeNote(text: string): RecipeAiDraft {
       : [{ name: "待补充", ml: 0, note: "适量" }],
     steps,
     taste: {
-      category: hasSparkling ? "碳酸" : hasRum ? "特调" : "经典",
+      category: hasSparkling ? "碳酸" : "经典",
       tagline: dateNote ? `${dateNote} 手记` : "",
       sweetness: hasC ? 3 : 2,
       acidity: hasC ? 4 : 3,
@@ -139,6 +144,8 @@ export function heuristicParseRecipeNote(text: string): RecipeAiDraft {
       isNonAlcoholic: abv < 0.5,
       hasDairy: false,
       hasCaffeine: false,
+      hasTea: false,
+      hasSparkling,
       allergens: "",
       flavorText: "",
     },
@@ -193,22 +200,40 @@ function spiritAbvPct(name: string): number {
   return 0;
 }
 
-/** 按常见牌子酒精度估算整杯 ABV%；加满按 130ml 计 */
-export function estimateAbv(ingredients: Ingredient[]): number {
+/**
+ * 按常见牌子酒精度估算整杯 ABV%。
+ * glassType 容量用于估算「加满」：剩余容量 = 杯容 − 已知毫升。
+ */
+export function estimateAbv(
+  ingredients: Ingredient[],
+  glassType?: string | null,
+): number {
+  const capacity = glassCapacityMl(glassType);
+  let knownMl = 0;
+  let topUpCount = 0;
+  for (const i of ingredients) {
+    if (i.ml > 0) knownMl += i.ml;
+    else if (/加满|适量/.test(i.note || "")) topUpCount += 1;
+  }
+  const remain = Math.max(40, capacity - knownMl);
+  const topUpEach = topUpCount > 0 ? remain / topUpCount : 0;
+
   let alcoholMl = 0;
   let volumeMl = 0;
   for (const i of ingredients) {
     const pct = spiritAbvPct(i.name);
     let ml = i.ml > 0 ? i.ml : 0;
     if (!ml && /加满|适量/.test(i.note || "")) {
-      ml = pct > 0 ? 30 : 130;
+      ml = pct > 0 ? Math.min(45, topUpEach || 30) : topUpEach || 120;
     }
     if (!ml) continue;
     volumeMl += ml;
     alcoholMl += (ml * pct) / 100;
   }
-  if (volumeMl < 1 || alcoholMl < 0.01) return 0;
-  return Math.round((alcoholMl / volumeMl) * 1000) / 10;
+  // 若总量仍远小于杯容，用杯容作分母更接近实饮浓度
+  const denom = Math.max(volumeMl, capacity * 0.55);
+  if (denom < 1 || alcoholMl < 0.01) return 0;
+  return Math.round((alcoholMl / denom) * 1000) / 10;
 }
 
 /** 强制步骤为 1. 2. 3. 分行 */
@@ -299,6 +324,10 @@ function normalizeDraft(raw: unknown, fallback: RecipeAiDraft): RecipeAiDraft {
       ),
       hasDairy: Boolean(tasteRaw.hasDairy ?? fallback.taste.hasDairy),
       hasCaffeine: Boolean(tasteRaw.hasCaffeine ?? fallback.taste.hasCaffeine),
+      hasTea: Boolean(tasteRaw.hasTea ?? fallback.taste.hasTea),
+      hasSparkling: Boolean(
+        tasteRaw.hasSparkling ?? fallback.taste.hasSparkling,
+      ),
       allergens: String(tasteRaw.allergens ?? fallback.taste.allergens),
       flavorText: String(tasteRaw.flavorText ?? fallback.taste.flavorText),
     },

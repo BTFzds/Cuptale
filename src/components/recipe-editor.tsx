@@ -37,6 +37,8 @@ const emptyTaste: RecipeTasteDraft = {
   isNonAlcoholic: false,
   hasDairy: false,
   hasCaffeine: false,
+  hasTea: false,
+  hasSparkling: false,
   allergens: "",
   flavorText: "",
 };
@@ -647,26 +649,26 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
             ) : null}
           </div>
           <div className="flex flex-wrap gap-4 text-sm">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={taste.isNonAlcoholic}
-                onChange={(e) =>
-                  setTaste((t) => ({ ...t, isNonAlcoholic: e.target.checked }))
-                }
-              />
-              无酒精
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={taste.hasDairy}
-                onChange={(e) =>
-                  setTaste((t) => ({ ...t, hasDairy: e.target.checked }))
-                }
-              />
-              含奶
-            </label>
+            {(
+              [
+                ["hasDairy", "含奶"],
+                ["hasCaffeine", "含咖啡因"],
+                ["hasTea", "含茶"],
+                ["hasSparkling", "含气泡"],
+                ["isNonAlcoholic", "无酒精"],
+              ] as const
+            ).map(([key, label]) => (
+              <label key={key} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={taste[key]}
+                  onChange={(e) =>
+                    setTaste((t) => ({ ...t, [key]: e.target.checked }))
+                  }
+                />
+                {label}
+              </label>
+            ))}
           </div>
         </div>
 

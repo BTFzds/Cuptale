@@ -19,6 +19,8 @@ const updateSchema = z.object({
   isNonAlcoholic: z.boolean().optional(),
   hasDairy: z.boolean().optional(),
   hasCaffeine: z.boolean().optional(),
+  hasTea: z.boolean().optional(),
+  hasSparkling: z.boolean().optional(),
   allergens: z.string().optional(),
   isPublished: z.boolean().optional(),
   isAvailable: z.boolean().optional(),

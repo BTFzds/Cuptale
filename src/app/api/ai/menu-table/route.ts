@@ -16,23 +16,35 @@ const rowSchema = z.object({
   glassType: z.string(),
   isPublished: z.boolean(),
   isAvailable: z.boolean(),
+  isNonAlcoholic: z.boolean().optional().default(false),
+  hasDairy: z.boolean().optional().default(false),
+  hasCaffeine: z.boolean().optional().default(false),
+  hasTea: z.boolean().optional().default(false),
+  hasSparkling: z.boolean().optional().default(false),
   flavorText: z.string(),
   ingredientsSummary: z.string(),
   imageUrl: z.string().nullable().optional().default(null),
-});
-
-const schema = z.object({
-  rows: z.array(rowSchema).min(1),
-  instruction: z.string().min(1),
+  salesCount: z.number().optional().default(0),
 });
 
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
-    const body = schema.parse(await request.json());
+    const body = z
+      .object({ rows: z.array(rowSchema).min(1), instruction: z.string().min(1) })
+      .parse(await request.json());
     if (!body.instruction.trim()) return jsonError("请输入修改指令");
     const rows = await editMenuTableWithAi({
-      rows: body.rows.map((r) => ({ ...r, imageUrl: r.imageUrl ?? null })),
+      rows: body.rows.map((r) => ({
+        ...r,
+        imageUrl: r.imageUrl ?? null,
+        isNonAlcoholic: r.isNonAlcoholic,
+        hasDairy: r.hasDairy,
+        hasCaffeine: r.hasCaffeine,
+        hasTea: r.hasTea,
+        hasSparkling: r.hasSparkling,
+        salesCount: r.salesCount ?? 0,
+      })),
       instruction: body.instruction,
     });
     return jsonOk({ rows });

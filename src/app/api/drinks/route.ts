@@ -19,6 +19,8 @@ const drinkBodySchema = z.object({
   isNonAlcoholic: z.boolean().optional().default(false),
   hasDairy: z.boolean().optional().default(false),
   hasCaffeine: z.boolean().optional().default(false),
+  hasTea: z.boolean().optional().default(false),
+  hasSparkling: z.boolean().optional().default(false),
   allergens: z.string().optional().default(""),
   isPublished: z.boolean().optional().default(false),
   isAvailable: z.boolean().optional().default(true),
@@ -42,7 +44,7 @@ export async function GET(request: NextRequest) {
       where: { isPublished: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     });
-    return jsonOk({ drinks: drinks.map(toPublicDrink) });
+    return jsonOk({ drinks: drinks.map((d) => toPublicDrink(d)) });
   } catch (error) {
     return handleRouteError(error);
   }
@@ -67,6 +69,8 @@ export async function POST(request: NextRequest) {
         isNonAlcoholic: body.isNonAlcoholic,
         hasDairy: body.hasDairy,
         hasCaffeine: body.hasCaffeine,
+        hasTea: body.hasTea,
+        hasSparkling: body.hasSparkling,
         allergens: body.allergens,
         isPublished: body.isPublished,
         isAvailable: body.isAvailable,
