@@ -49,6 +49,9 @@ export async function PATCH(request: NextRequest) {
       await request.json(),
     );
 
+    let updated = 0;
+    let skipped = 0;
+
     for (const row of body.rows) {
       const category = normalizeDrinkCategory(row.category);
       const sweetness = clampTaste(row.sweetness, 3);
@@ -80,30 +83,42 @@ export async function PATCH(request: NextRequest) {
         ...tags,
       };
 
-      if (row.recipeId) {
-        await keepSingleDrinkForRecipe(row.recipeId);
+      const recipe =
+        row.recipeId
+          ? await prisma.recipe.findUnique({ where: { id: row.recipeId } })
+          : null;
+      const drink =
+        row.drinkId
+          ? await prisma.drink.findUnique({ where: { id: row.drinkId } })
+          : null;
+
+      if (recipe) {
+        await keepSingleDrinkForRecipe(recipe.id);
         await prisma.recipe.update({
-          where: { id: row.recipeId },
+          where: { id: recipe.id },
           data: { name: row.name, category, flavorText: row.flavorText },
         });
 
-        if (row.drinkId) {
+        if (drink) {
           await prisma.drink.update({
-            where: { id: row.drinkId },
-            data: { ...drinkData, recipeId: row.recipeId },
+            where: { id: drink.id },
+            data: { ...drinkData, recipeId: recipe.id },
           });
         } else if (row.isPublished) {
           await prisma.drink.create({
-            data: { ...drinkData, recipeId: row.recipeId },
+            data: { ...drinkData, recipeId: recipe.id },
           });
         }
-      } else if (row.drinkId) {
+        updated += 1;
+      } else if (drink) {
+        // 配方已删：只改酒品，清掉失效 recipeId
         await prisma.drink.update({
-          where: { id: row.drinkId },
-          data: drinkData,
+          where: { id: drink.id },
+          data: { ...drinkData, recipeId: null },
         });
-      } else if (row.name.trim()) {
-        // CSV 导入的新行（无配方/无酒品 ID）
+        updated += 1;
+      } else if (!row.recipeId && !row.drinkId && row.name.trim()) {
+        // CSV 新增行（尚无 ID）
         await prisma.drink.create({
           data: {
             ...drinkData,
@@ -111,10 +126,13 @@ export async function PATCH(request: NextRequest) {
             recipeId: null,
           },
         });
+        updated += 1;
+      } else {
+        skipped += 1;
       }
     }
 
-    return jsonOk({ ok: true });
+    return jsonOk({ ok: true, updated, skipped });
   } catch (error) {
     return handleRouteError(error);
   }

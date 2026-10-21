@@ -53,6 +53,18 @@ body {
 
   .field {
     @apply w-full rounded-sm border border-[#4a2d5c] bg-[#1e1028] px-3.5 py-3 text-sm text-ink outline-none transition focus:border-hush-pink;
+    scrollbar-width: thin;
+    scrollbar-color: #4a2d5c transparent;
+  }
+  .field::-webkit-scrollbar {
+    width: 4px;
+  }
+  .field::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .field::-webkit-scrollbar-thumb {
+    background: #4a2d5c;
+    border-radius: 2px;
   }
 
   .tag {
@@ -61,5 +73,14 @@ body {
 
   .card-surface {
     @apply border border-[#4a2d5c] bg-[#241430];
+  }
+
+  /* 可滚动但隐藏系统滚动条（点单双栏等） */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

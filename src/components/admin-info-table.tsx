@@ -61,7 +61,12 @@ export function AdminInfoTable() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失败");
-      setMessage("已保存");
+      const skipped = Number(data.skipped) || 0;
+      setMessage(
+        skipped > 0
+          ? `已保存 ${data.updated ?? ""} 行，跳过失效 ${skipped} 行`
+          : "已保存",
+      );
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失败");

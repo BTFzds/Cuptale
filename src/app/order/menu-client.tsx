@@ -22,6 +22,10 @@ export interface MenuDrink {
   salesCount: number;
 }
 
+/** 行高：标题 + 标签 + 三行介绍 + 选规格，与左侧图同高对齐 */
+const ROW_H = 148;
+const IMG_SIZE = 132;
+
 function DrinkTags({ drink }: { drink: MenuDrink }) {
   const tags: string[] = [];
   if (drink.hasDairy) tags.push("含奶");
@@ -29,9 +33,9 @@ function DrinkTags({ drink }: { drink: MenuDrink }) {
   if (drink.hasTea) tags.push("含茶");
   if (drink.hasSparkling) tags.push("含气泡");
   if (drink.isNonAlcoholic) tags.push("无酒精");
-  if (!tags.length) return null;
+  if (!tags.length) return <div className="h-1" />;
   return (
-    <div className="mt-1.5 flex flex-wrap gap-1">
+    <div className="mt-0.5 flex flex-wrap gap-1">
       {tags.map((t) => (
         <span key={t} className="tag">
           {t}
@@ -44,21 +48,28 @@ function DrinkTags({ drink }: { drink: MenuDrink }) {
 function DrinkRow({ drink }: { drink: MenuDrink }) {
   return (
     <li
-      className={`border-b border-hush-plum/40 px-3 py-3.5 ${
+      className={`border-b border-hush-plum/40 px-3 ${
         drink.isAvailable ? "" : "opacity-45 grayscale"
       }`}
+      style={{ height: ROW_H }}
     >
-      <div className="flex items-stretch gap-3">
-        {/* 透明成片：无底色、无边框 */}
-        <div className="relative h-[108px] w-[108px] shrink-0">
+      <div className="flex h-full items-end gap-2.5 py-2">
+        {/* 成片深色底用 lighten 融入页面深底，避免浅色方块感 */}
+        <div
+          className="relative shrink-0 self-end"
+          style={{ width: IMG_SIZE, height: IMG_SIZE }}
+        >
           {drink.imageUrl ? (
             <Image
               src={drink.imageUrl}
               alt={drink.name}
               fill
-              className="object-contain !bg-transparent"
-              sizes="108px"
-              style={{ background: "transparent" }}
+              className="object-contain object-bottom"
+              sizes={`${IMG_SIZE}px`}
+              style={{
+                background: "transparent",
+                mixBlendMode: "lighten",
+              }}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-[10px] text-ink-mute">
@@ -66,15 +77,15 @@ function DrinkRow({ drink }: { drink: MenuDrink }) {
             </div>
           )}
           {!drink.isAvailable ? (
-            <span className="absolute left-0 top-0 rounded-sm bg-black/55 px-1.5 py-0.5 text-[9px] text-ink">
+            <span className="absolute left-0 top-0 z-[1] rounded-sm bg-black/55 px-1.5 py-0.5 text-[9px] text-ink">
               售罄
             </span>
           ) : null}
         </div>
 
-        <div className="flex min-h-[108px] min-w-0 flex-1 flex-col">
+        <div className="flex h-full min-w-0 flex-1 flex-col">
           <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-[15px] font-medium leading-snug text-ink">
+            <h3 className="truncate text-[15px] font-medium leading-snug text-ink">
               {drink.name}
             </h3>
             <span className="shrink-0 text-[10px] text-ink-mute">
@@ -82,10 +93,12 @@ function DrinkRow({ drink }: { drink: MenuDrink }) {
             </span>
           </div>
           <DrinkTags drink={drink} />
-          <p className="mt-1 min-h-0 flex-1 line-clamp-3 text-xs leading-5 text-ink-mute">
-            {drink.flavorText || drink.tagline || ""}
+          <p className="mt-0.5 h-[60px] overflow-hidden text-xs leading-5 text-ink-mute">
+            <span className="line-clamp-3">
+              {drink.flavorText || drink.tagline || ""}
+            </span>
           </p>
-          <div className="mt-auto flex justify-end pt-1">
+          <div className="mt-auto flex justify-end">
             {drink.isAvailable ? (
               <Link
                 href={`/drinks/${drink.id}`}
@@ -168,7 +181,7 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* 左侧分类：独立滚动 */}
-        <aside className="w-[84px] shrink-0 overflow-y-auto overscroll-contain bg-[#1a0f24] pb-24">
+        <aside className="no-scrollbar w-[84px] shrink-0 overflow-y-auto overscroll-contain bg-[#1a0f24] pb-24">
           {sidebarCats.map((cat) => {
             const selected = active === cat;
             return (
@@ -178,7 +191,7 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
                 onClick={() => jumpTo(cat)}
                 className={`relative block w-full px-2 py-4 text-center text-xs leading-tight ${
                   selected
-                    ? "bg-sand font-semibold text-hush-pink"
+                    ? "bg-[#241430] font-semibold text-hush-pink"
                     : "text-ink-mute"
                 }`}
               >
@@ -191,10 +204,10 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
           })}
         </aside>
 
-        {/* 右侧饮品：独立滚动 + 分类小标题 */}
+        {/* 右侧饮品：独立滚动；列表底色与页面深底一致 */}
         <section
           ref={listRef}
-          className="min-w-0 flex-1 overflow-y-auto overscroll-contain pb-28"
+          className="no-scrollbar min-w-0 flex-1 overflow-y-auto overscroll-contain bg-[#160c1f] pb-28"
         >
           <div data-list-pad className="px-3 pb-1 pt-3 text-[11px] text-ink-mute">
             共 {drinks.length} 款
@@ -213,7 +226,7 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
                   sectionRefs.current[cat] = el;
                 }}
               >
-                <div className="sticky top-0 z-10 bg-[#1e1028]/95 px-3 py-2 backdrop-blur">
+                <div className="sticky top-0 z-10 bg-[#1a0f24] px-3 py-2">
                   <h2 className="font-display text-[15px] text-ink">{cat}</h2>
                   <p className="text-[10px] text-ink-mute">{items.length} 款</p>
                 </div>
