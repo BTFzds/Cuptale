@@ -12,6 +12,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "vercel-build": "prisma generate && node scripts/dedupe-drinks.mjs && prisma db push --accept-data-loss && next build",
     "netlify-build": "prisma generate && node scripts/dedupe-drinks.mjs && prisma db push --accept-data-loss && next build",
+    "preflight:netlify": "prisma generate && npx tsc --noEmit && next build",
     "db:studio": "prisma studio"
   },
   "dependencies": {

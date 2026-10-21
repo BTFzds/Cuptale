@@ -71,5 +71,6 @@ alwaysApply: true
 - Target Netlify (or Vercel); Framework Preset = Next.js.
 - Required env: `DATABASE_URL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `DEEPSEEK_API_KEY`, Supabase keys for images.
 - DB: Prisma Postgres (or Neon / Supabase). When connecting integration, Custom Prefix must be `DATABASE` so the var is `DATABASE_URL`.
+- `netlify-build` = generate → **raw-SQL dedupe**（勿用 findMany，避免新列未 push 时崩溃）→ `db push --accept-data-loss` → `next build`。推送前本地至少跑通 `npx tsc --noEmit` 与 `npx next build`。
 - Keep `awesome-cursorrules-main/` local-only (gitignored) as a prompt library.
 - Deploy fill-in checklist lives in `DEPLOY.md`.
