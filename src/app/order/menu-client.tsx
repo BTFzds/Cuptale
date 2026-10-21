@@ -48,15 +48,17 @@ function DrinkRow({ drink }: { drink: MenuDrink }) {
         drink.isAvailable ? "" : "opacity-45 grayscale"
       }`}
     >
-      <div className="flex gap-3">
-        <div className="relative h-[108px] w-[108px] shrink-0 overflow-hidden bg-transparent">
+      <div className="flex items-stretch gap-3">
+        {/* 透明成片：无底色、无边框 */}
+        <div className="relative h-[108px] w-[108px] shrink-0">
           {drink.imageUrl ? (
             <Image
               src={drink.imageUrl}
               alt={drink.name}
               fill
-              className="object-contain"
+              className="object-contain !bg-transparent"
               sizes="108px"
+              style={{ background: "transparent" }}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-[10px] text-ink-mute">
@@ -64,13 +66,13 @@ function DrinkRow({ drink }: { drink: MenuDrink }) {
             </div>
           )}
           {!drink.isAvailable ? (
-            <span className="absolute left-1 top-1 rounded-sm bg-black/55 px-1.5 py-0.5 text-[9px] text-ink">
+            <span className="absolute left-0 top-0 rounded-sm bg-black/55 px-1.5 py-0.5 text-[9px] text-ink">
               售罄
             </span>
           ) : null}
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="flex min-h-[108px] min-w-0 flex-1 flex-col">
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="text-[15px] font-medium leading-snug text-ink">
               {drink.name}
@@ -80,10 +82,10 @@ function DrinkRow({ drink }: { drink: MenuDrink }) {
             </span>
           </div>
           <DrinkTags drink={drink} />
-          <div className="mt-1.5 flex items-end gap-2">
-            <p className="min-w-0 flex-1 line-clamp-2 text-xs leading-5 text-ink-mute">
-              {drink.flavorText || drink.tagline || ""}
-            </p>
+          <p className="mt-1 min-h-0 flex-1 line-clamp-3 text-xs leading-5 text-ink-mute">
+            {drink.flavorText || drink.tagline || ""}
+          </p>
+          <div className="mt-auto flex justify-end pt-1">
             {drink.isAvailable ? (
               <Link
                 href={`/drinks/${drink.id}`}
