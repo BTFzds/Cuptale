@@ -1,15 +1,25 @@
+/**
+ * Netlify / 生产 db push 前：清理同一 recipeId 多杯酒，避免 @unique 建索引失败。
+ */
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  if (!process.env.DATABASE_URL) {
+    console.log("[dedupe] skip: no DATABASE_URL");
+    return;
+  }
+
   const drinks = await prisma.drink.findMany({
     where: { recipeId: { not: null } },
     orderBy: { updatedAt: "desc" },
   });
+
   const seen = new Set();
   let unlinked = 0;
   for (const d of drinks) {
+    if (!d.recipeId) continue;
     if (seen.has(d.recipeId)) {
       await prisma.drink.update({
         where: { id: d.id },
@@ -40,14 +50,12 @@ async function main() {
     }
   }
 
-  console.log(
-    JSON.stringify({ unlinked, unpublished, ok: true }, null, 2),
-  );
+  console.log(`[dedupe] unlinked=${unlinked} unpublished_name_dups=${unpublished}`);
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("[dedupe] failed:", e);
     process.exit(1);
   })
   .finally(async () => {
