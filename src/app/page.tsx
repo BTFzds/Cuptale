@@ -52,14 +52,14 @@ export default async function HomePage() {
                   drink.isAvailable ? "" : "opacity-45 grayscale"
                 }`}
               >
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden bg-transparent">
+                <div className="relative h-[108px] w-[108px] shrink-0 overflow-hidden bg-transparent">
                   {drink.imageUrl ? (
                     <Image
                       src={drink.imageUrl}
                       alt={drink.name}
                       fill
-                      className="object-cover"
-                      sizes="80px"
+                      className="object-contain"
+                      sizes="108px"
                     />
                   ) : null}
                 </div>
