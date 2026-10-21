@@ -35,7 +35,7 @@ export function PublishRecipeButton({ recipeId }: { recipeId: string }) {
       disabled={busy}
       onClick={publish}
     >
-      {busy ? "…" : "上架为酒品"}
+      {busy ? "…" : "上架"}
     </button>
   );
 }
@@ -76,9 +76,15 @@ export function DrinkShelfButtons({
         type="button"
         className="btn-ghost px-3 py-1.5 text-xs"
         disabled={busy}
-        onClick={() => patch({ isPublished: !isPublished })}
+        onClick={() =>
+          patch(
+            isPublished
+              ? { isPublished: false }
+              : { isPublished: true, isAvailable: true },
+          )
+        }
       >
-        {isPublished ? "下架" : "重新上架"}
+        {isPublished ? "下架" : "上架"}
       </button>
       <button
         type="button"
@@ -86,8 +92,33 @@ export function DrinkShelfButtons({
         disabled={busy || !isPublished}
         onClick={() => patch({ isAvailable: !isAvailable })}
       >
-        {isAvailable ? "设为售罄" : "恢复供应"}
+        {isAvailable ? "售罄" : "供应"}
       </button>
     </div>
+  );
+}
+
+/** 菜单行：有酒品则调状态，无酒品则一键上架创建 */
+export function MenuShelfControls({
+  recipeId,
+  drinkId,
+  isPublished,
+  isAvailable,
+}: {
+  recipeId?: string;
+  drinkId: string | null;
+  isPublished: boolean;
+  isAvailable: boolean;
+}) {
+  if (!drinkId) {
+    if (!recipeId) return null;
+    return <PublishRecipeButton recipeId={recipeId} />;
+  }
+  return (
+    <DrinkShelfButtons
+      drinkId={drinkId}
+      isPublished={isPublished}
+      isAvailable={isAvailable}
+    />
   );
 }

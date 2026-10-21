@@ -24,7 +24,9 @@ alwaysApply: true
 - Guest public APIs must never return recipes; use `?admin=1` / `scope=admin` only for admin UI fetches.
 - Drink (menu) and Recipe (private notebook) are separate; a drink may publish without a recipe.
 - Recipe notebook flow: paste rough notes + photos → AI parse/chat（顺序与手法）→ save private recipe → later add photos → **上架为酒品**（copies taste tags + flavorText; guests still never see recipe internals）.
-- Admin nav labels: **未上架** = recipes without a published drink; **已上架** = published drinks. List actions: 上架为酒品 / 下架 / 设为售罄.
+- Admin nav: **订单** + **菜单** + **信息管理**. 菜单 = recipe notebook list (AI ingest); each row toggles 上架/下架（`isPublished`，下架前台不显示）and 售罄/供应（`isAvailable`，售罄灰显）. 新增 always goes to recipe/AI flow（先图后文再识别）. 信息管理 = 表格统筹改口味/状态，支持 AI 批量改表.
+- Recipe AI: steps must be numbered `1. 2. 3.`; ABV from common-brand assumptions; chat/parse must pass vision images (resolve `/uploads` to data URLs).
+- One recipe ↔ at most one drink (`Drink.recipeId` unique). Guest menu dedupes by recipeId/name. Guest tags: ABV / 含奶 / 含咖啡因 only（不展示杯型）. Glass options live in `src/lib/glasses.ts` for AI + admin selects.
 - Order workflow: tap order → preview sheet (image + ingredient summary) → 开始制作 → `/admin/orders/[id]` shows private recipe and sets status `making` → 制作完毕 → `done` and back to orders.
 - Netlify image upload needs Supabase Storage env; empty tables alone are not the upload failure cause（serverless 不能写本地 `public/uploads`）.
 - Unavailable drinks: greyed out, not hidden; not orderable.

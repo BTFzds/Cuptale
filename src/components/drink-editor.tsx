@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageUpload } from "@/components/image-upload";
 import { DRINK_CATEGORIES } from "@/lib/categories";
+import { DEFAULT_GLASS_TYPE, GLASS_TYPES } from "@/lib/glasses";
 
 interface RecipeOption {
   id: string;
@@ -41,7 +42,7 @@ const emptyForm: DrinkForm = {
   acidity: 3,
   strength: 3,
   abvApprox: "",
-  glassType: "岩石杯",
+  glassType: DEFAULT_GLASS_TYPE,
   isNonAlcoholic: false,
   hasDairy: false,
   hasCaffeine: false,
@@ -287,11 +288,17 @@ export function DrinkEditor({ drinkId }: { drinkId?: string }) {
               </label>
               <label className="block space-y-2">
                 <span className="text-sm">杯型</span>
-                <input
+                <select
                   className="field"
                   value={form.glassType}
                   onChange={(e) => patch("glassType", e.target.value)}
-                />
+                >
+                  {GLASS_TYPES.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
             <label className="block space-y-2">

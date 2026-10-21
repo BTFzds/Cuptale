@@ -2,17 +2,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { GuestNav } from "@/components/guest-nav";
+import { dedupePublishedDrinks } from "@/lib/dedupe-drinks";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const featured = await prisma.drink.findMany({
+  const all = await prisma.drink.findMany({
     where: { isPublished: true },
     include: { recipe: { select: { flavorText: true } } },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-    take: 2,
   });
+  const featured = dedupePublishedDrinks(all).slice(0, 2);
 
   return (
     <main className="shell">

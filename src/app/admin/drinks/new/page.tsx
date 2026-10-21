@@ -1,20 +1,6 @@
-import Link from "next/link";
-import { AdminNav } from "@/components/admin-nav";
-import { DrinkEditor } from "@/components/drink-editor";
-import { requireAdminPage } from "@/lib/admin-guard";
+import { redirect } from "next/navigation";
 
-export default async function NewDrinkPage() {
-  await requireAdminPage();
-  return (
-    <main>
-      <AdminNav />
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="font-display text-2xl text-ink">新增酒品</h1>
-        <Link href="/admin/drinks" className="text-sm text-ink-mute">
-          返回列表
-        </Link>
-      </div>
-      <DrinkEditor />
-    </main>
-  );
+/** 旧酒品新增（无 AI），统一走配方/AI 新增 */
+export default function AdminNewDrinkRedirect() {
+  redirect("/admin/recipes/new");
 }

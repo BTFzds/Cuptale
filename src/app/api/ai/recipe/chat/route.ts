@@ -45,6 +45,7 @@ const schema = z.object({
       }),
     )
     .min(1),
+  imageUrls: z.array(z.string()).optional().default([]),
 });
 
 export async function POST(request: NextRequest) {
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest) {
     const draft = await chatRecipeWithAi({
       draft: body.draft as RecipeAiDraft,
       messages: body.messages,
+      imageUrls: body.imageUrls,
     });
     return jsonOk({ draft });
   } catch (error) {

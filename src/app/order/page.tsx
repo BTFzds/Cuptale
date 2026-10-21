@@ -1,4 +1,5 @@
 import { MenuClient } from "./menu-client";
+import { dedupePublishedDrinks } from "@/lib/dedupe-drinks";
 import { toPublicDrink } from "@/lib/dto";
 import { prisma } from "@/lib/prisma";
 
@@ -11,5 +12,7 @@ export default async function OrderPage() {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
-  return <MenuClient drinks={drinks.map(toPublicDrink)} />;
+  const unique = dedupePublishedDrinks(drinks);
+
+  return <MenuClient drinks={unique.map(toPublicDrink)} />;
 }

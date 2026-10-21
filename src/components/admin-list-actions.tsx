@@ -38,7 +38,7 @@ export function AdminListActions({
       </Link>
       <button
         type="button"
-        className="btn-ghost px-3 py-1.5 text-xs text-red-700"
+        className="btn-ghost px-3 py-1.5 text-xs text-red-400"
         disabled={busy}
         onClick={handleDelete}
       >

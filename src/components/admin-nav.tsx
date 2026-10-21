@@ -5,9 +5,18 @@ import { usePathname } from "next/navigation";
 import { BRAND_NAME } from "@/lib/brand";
 
 const items = [
-  { href: "/admin/orders", label: "订单" },
-  { href: "/admin/recipes", label: "未上架" },
-  { href: "/admin/drinks", label: "已上架" },
+  { href: "/admin/orders", label: "订单", match: (p: string) => p.startsWith("/admin/orders") },
+  {
+    href: "/admin/recipes",
+    label: "菜单",
+    match: (p: string) =>
+      p.startsWith("/admin/recipes") || p.startsWith("/admin/drinks"),
+  },
+  {
+    href: "/admin/info",
+    label: "信息管理",
+    match: (p: string) => p.startsWith("/admin/info"),
+  },
 ];
 
 export function AdminNav() {
@@ -22,7 +31,7 @@ export function AdminNav() {
       </div>
       <nav className="flex gap-2">
         {items.map((item) => {
-          const active = pathname.startsWith(item.href);
+          const active = item.match(pathname);
           return (
             <Link
               key={item.href}

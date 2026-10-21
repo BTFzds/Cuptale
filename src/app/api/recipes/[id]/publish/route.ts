@@ -2,7 +2,9 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { DRINK_CATEGORIES } from "@/lib/categories";
+import { keepSingleDrinkForRecipe } from "@/lib/drink-recipe-link";
 import { toAdminDrink } from "@/lib/dto";
+import { DEFAULT_GLASS_TYPE, normalizeGlassType } from "@/lib/glasses";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 
@@ -40,34 +42,38 @@ export async function POST(
       ? picked
       : "经典";
 
-    const existing = await prisma.drink.findFirst({
-      where: { recipeId: recipe.id },
-      orderBy: { updatedAt: "desc" },
-    });
+    const existing = await keepSingleDrinkForRecipe(recipe.id);
 
     const data = {
-      name: body.name?.trim() || recipe.name,
+      name: body.name?.trim() || existing?.name || recipe.name,
       imageUrl:
         body.imageUrl === undefined
-          ? recipe.imageUrl
+          ? existing?.imageUrl ?? recipe.imageUrl
           : body.imageUrl || null,
       flavorText:
         body.flavorText?.trim() ||
         recipe.flavorText?.trim() ||
+        existing?.flavorText ||
         "",
       category,
-      tagline: body.tagline || "",
-      sweetness: body.sweetness ?? 3,
-      acidity: body.acidity ?? 3,
-      strength: body.strength ?? 3,
-      abvApprox: body.abvApprox ?? null,
-      glassType: body.glassType || "岩石杯",
-      isNonAlcoholic: body.isNonAlcoholic ?? false,
-      hasDairy: body.hasDairy ?? false,
-      hasCaffeine: body.hasCaffeine ?? false,
-      allergens: body.allergens || "",
+      tagline: body.tagline ?? existing?.tagline ?? "",
+      sweetness: body.sweetness ?? existing?.sweetness ?? 3,
+      acidity: body.acidity ?? existing?.acidity ?? 3,
+      strength: body.strength ?? existing?.strength ?? 3,
+      abvApprox:
+        body.abvApprox !== undefined
+          ? body.abvApprox
+          : (existing?.abvApprox ?? null),
+      glassType: normalizeGlassType(
+        body.glassType || existing?.glassType || DEFAULT_GLASS_TYPE,
+      ),
+      isNonAlcoholic:
+        body.isNonAlcoholic ?? existing?.isNonAlcoholic ?? false,
+      hasDairy: body.hasDairy ?? existing?.hasDairy ?? false,
+      hasCaffeine: body.hasCaffeine ?? existing?.hasCaffeine ?? false,
+      allergens: body.allergens ?? existing?.allergens ?? "",
       isPublished: body.isPublished ?? true,
-      isAvailable: body.isAvailable ?? true,
+      isAvailable: body.isAvailable ?? existing?.isAvailable ?? true,
       recipeId: recipe.id,
     };
 

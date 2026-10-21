@@ -1,7 +1,13 @@
 import OpenAI from "openai";
+import { resolveImagesForVision } from "@/lib/ai-images";
 import { generateFlavorText } from "@/lib/deepseek";
 import type { Ingredient } from "@/lib/ingredients";
 import { DRINK_CATEGORIES } from "@/lib/categories";
+import {
+  DEFAULT_GLASS_TYPE,
+  GLASS_TYPES_PROMPT,
+  normalizeGlassType,
+} from "@/lib/glasses";
 
 export type RecipeTasteDraft = {
   category: string;
@@ -30,24 +36,24 @@ export type RecipeAiDraft = {
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
-const PARSE_SYSTEM = `你是「HUSH」家庭调酒吧的私人配方助手。用户会贴随手记（日期+酒名+原料毫升）和成片照片说明。
-把信息整理成可保存的内部配方，并推算前台酒品口味参数（含分类标签）。
+const PARSE_SYSTEM = `你是「HUSH」家庭调酒吧的私人配方助手。用户会先给成片照片，再贴随手记（酒名+原料毫升），你必须结合「图片+文字」一起解析。
 
 硬性要求：
 1. 只输出一个 JSON 对象，不要 markdown 代码围栏，不要其它说明文字。
 2. ingredients 按「倒入顺序」排列；「加满/适量」时 ml 填 0，note 写「加满」或「适量」。若写了「糖浆」但未标明种类，ingredient 名先写「糖浆」，并在 questions 必问：是红色红石榴糖浆还是无色蔗糖糖浆？
-3. steps 用短中文分步，写清手法与顺序；不确定处列入 questions。
-4. taste：category 只能是 ${DRINK_CATEGORIES.join("/") } 之一；sweetness/acidity/strength 为 1–5；glassType 优先根据成片照片推断（气球杯/岩石杯/高球杯等）。
-5. flavorText 必须当场写好对外短文（2–4句），可结合照片颜色与气质，绝对不要写原料名/毫升/步骤。
-6. assistantMessage 一两句即可，少解释。
-7. questions 短句数组；有糖浆未分类时必须包含糖浆种类确认。
+3. steps 必须用「1. 2. 3.」编号分行（每行一步），写清手法、冰块时机、倒入顺序；不要写成一段散文。不确定处列入 questions。
+4. 酒类一律按市面最常见普通牌子理解（如常见威士忌约 40% vol、朗姆/伏特加/金酒约 40%、利口酒约 15–20%），ingredient 名写通用品类即可。
+5. taste.abvApprox 必须按原料毫升与常见酒精度估算整杯约酒精度（%），「加满」的汽水/气泡水按约 120–150ml 计入分母；无酒精则为 0 或 null 且 isNonAlcoholic=true。
+6. taste：category 只能是 ${DRINK_CATEGORIES.join("/")} 之一；sweetness/acidity/strength 为 1–5，结合含糖/酸液/烈酒量推断；glassType 必须从家里实有杯具中选一项：${GLASS_TYPES_PROMPT}。优先根据成片照片外形（矮厚底/高直筒/气球大肚/马天尼V型/椰林曲线等）判断。若用户消息里已附图片，禁止说「没收到图片」。
+7. flavorText 必须当场写好对外短文（2–4句），可结合照片颜色与气质，绝对不要写原料名/毫升/步骤。
+8. assistantMessage 一两句即可；questions 短句数组。
 
 JSON 形状：
 {
   "name": "酒名",
   "notes": "原始随手记或补充",
   "ingredients": [{"name":"原料","ml":25,"note":"可选"}],
-  "steps": "1.\\n2.",
+  "steps": "1. ...\\n2. ...\\n3. ...",
   "taste": {
     "category":"碳酸",
     "tagline":"短说明",
@@ -55,7 +61,7 @@ JSON 形状：
     "acidity":3,
     "strength":2,
     "abvApprox":5,
-    "glassType":"气球杯",
+    "glassType":"高球杯 300ml",
     "isNonAlcoholic":false,
     "hasDairy":false,
     "hasCaffeine":false,
@@ -66,8 +72,9 @@ JSON 形状：
   "assistantMessage":"..."
 }`;
 
-const CHAT_SYSTEM = `你是「HUSH」配方助手。用户正在确认倒酒顺序与手法。
+const CHAT_SYSTEM = `你是「HUSH」配方助手。用户正在确认倒酒顺序、杯型与手法。消息里可能附有成片照片，请结合图片回答，禁止说「没收到图片」（除非本轮确实没有任何图片附件）。
 根据对话更新配方草稿。只输出 JSON（同解析阶段形状），不要代码围栏。
+steps 必须保持「1. 2. 3.」编号分行。酒精度按常见牌子估算。
 保留用户已确认的内容；仍不确定的放进 questions；assistantMessage 简短回应。`;
 
 export function heuristicParseRecipeNote(text: string): RecipeAiDraft {
@@ -96,21 +103,21 @@ export function heuristicParseRecipeNote(text: string): RecipeAiDraft {
   const hasSparkling = ingredients.some((i) => /气泡|苏打|汽水|champagne/i.test(i.name));
   const hasC = ingredients.some((i) => /水溶|西柚|vitaminc|维生素/i.test(i.name));
 
-  const steps = [
+  const stepLines = [
     "杯中加适量冰块。",
-    ...ingredients.map((ing, idx) => {
+    ...ingredients.map((ing) => {
       const amount =
         ing.ml > 0 ? `${ing.ml}ml` : ing.note || "适量";
-      const verb =
-        idx === ingredients.length - 1 && /加满|气泡/.test(`${ing.name}${ing.note || ""}`)
-          ? "缓缓倒入至满杯"
-          : "倒入";
-      return `${idx + 1}. ${verb}${ing.name}（${amount}）。`;
+      const verb = /加满|气泡/.test(`${ing.name}${ing.note || ""}`)
+        ? "缓缓倒入"
+        : "倒入";
+      return `${verb}${ing.name}（${amount}）。`;
     }),
-    "轻搅均匀（若需分层则不要大力搅拌），即可。",
-  ].join("\n");
+    "按需轻搅或保持分层，即可。",
+  ];
+  const steps = ensureNumberedSteps(stepLines.join("\n"));
 
-  const abv = hasRum ? estimateAbv(ingredients) : 0;
+  const abv = estimateAbv(ingredients);
 
   return {
     name,
@@ -128,8 +135,8 @@ export function heuristicParseRecipeNote(text: string): RecipeAiDraft {
       acidity: hasC ? 4 : 3,
       strength: hasRum ? 2 : 1,
       abvApprox: abv || null,
-      glassType: "气球杯",
-      isNonAlcoholic: !hasRum,
+      glassType: DEFAULT_GLASS_TYPE,
+      isNonAlcoholic: abv < 0.5,
       hasDairy: false,
       hasCaffeine: false,
       allergens: "",
@@ -172,12 +179,51 @@ function parseIngredientLine(line: string): Ingredient[] {
   return items;
 }
 
-function estimateAbv(ingredients: Ingredient[]): number {
-  const spirit = ingredients.find((i) => /朗姆|伏特加|金酒|威士忌|龙舌兰/i.test(i.name));
-  if (!spirit || !spirit.ml) return 0;
-  const total = ingredients.reduce((sum, i) => sum + (i.ml || 0), 0) || 200;
-  const spiritAbv = /朗姆|伏特加|金酒|威士忌|龙舌兰/i.test(spirit.name) ? 40 : 15;
-  return Math.round(((spirit.ml * spiritAbv) / Math.max(total, spirit.ml)) * 10) / 10;
+function spiritAbvPct(name: string): number {
+  if (/威士忌|whisky|whiskey/i.test(name)) return 40;
+  if (/朗姆|rum/i.test(name)) return 40;
+  if (/伏特加|vodka/i.test(name)) return 40;
+  if (/金酒|琴酒|gin/i.test(name)) return 40;
+  if (/龙舌兰|tequila/i.test(name)) return 40;
+  if (/白兰地|干邑|brandy|cognac/i.test(name)) return 40;
+  if (/利口|力娇|甜酒|liqueur|君度|甘露/i.test(name)) return 17;
+  if (/红酒|白酒|葡萄酒|wine/i.test(name)) return 12;
+  if (/啤酒|beer/i.test(name)) return 5;
+  if (/米酒|清酒|sake/i.test(name)) return 15;
+  return 0;
+}
+
+/** 按常见牌子酒精度估算整杯 ABV%；加满按 130ml 计 */
+export function estimateAbv(ingredients: Ingredient[]): number {
+  let alcoholMl = 0;
+  let volumeMl = 0;
+  for (const i of ingredients) {
+    const pct = spiritAbvPct(i.name);
+    let ml = i.ml > 0 ? i.ml : 0;
+    if (!ml && /加满|适量/.test(i.note || "")) {
+      ml = pct > 0 ? 30 : 130;
+    }
+    if (!ml) continue;
+    volumeMl += ml;
+    alcoholMl += (ml * pct) / 100;
+  }
+  if (volumeMl < 1 || alcoholMl < 0.01) return 0;
+  return Math.round((alcoholMl / volumeMl) * 1000) / 10;
+}
+
+/** 强制步骤为 1. 2. 3. 分行 */
+export function ensureNumberedSteps(steps: string): string {
+  const lines = steps
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (!lines.length) return steps;
+  return lines
+    .map((line, i) => {
+      const stripped = line.replace(/^\d+[\.．、\)\]\s]+/, "").trim();
+      return `${i + 1}. ${stripped || line}`;
+    })
+    .join("\n");
 }
 
 function getClient() {
@@ -226,7 +272,7 @@ function normalizeDraft(raw: unknown, fallback: RecipeAiDraft): RecipeAiDraft {
     name: String(obj.name || fallback.name).trim() || fallback.name,
     notes: String(obj.notes ?? fallback.notes),
     ingredients: ingredients.length ? ingredients : fallback.ingredients,
-    steps: String(obj.steps || fallback.steps),
+    steps: ensureNumberedSteps(String(obj.steps || fallback.steps)),
     taste: {
       category: (DRINK_CATEGORIES as readonly string[]).includes(category)
         ? category
@@ -235,11 +281,19 @@ function normalizeDraft(raw: unknown, fallback: RecipeAiDraft): RecipeAiDraft {
       sweetness: clamp(tasteRaw.sweetness, fallback.taste.sweetness),
       acidity: clamp(tasteRaw.acidity, fallback.taste.acidity),
       strength: clamp(tasteRaw.strength, fallback.taste.strength),
-      abvApprox:
-        tasteRaw.abvApprox === null || tasteRaw.abvApprox === ""
-          ? null
-          : Number(tasteRaw.abvApprox) || fallback.taste.abvApprox,
-      glassType: String(tasteRaw.glassType || fallback.taste.glassType),
+      abvApprox: (() => {
+        const ings = ingredients.length ? ingredients : fallback.ingredients;
+        const computed = estimateAbv(ings);
+        if (tasteRaw.abvApprox === null || tasteRaw.abvApprox === "") {
+          return computed || null;
+        }
+        const n = Number(tasteRaw.abvApprox);
+        if (Number.isFinite(n) && n > 0) return n;
+        return computed || fallback.taste.abvApprox;
+      })(),
+      glassType: normalizeGlassType(
+        String(tasteRaw.glassType || fallback.taste.glassType),
+      ),
       isNonAlcoholic: Boolean(
         tasteRaw.isNonAlcoholic ?? fallback.taste.isNonAlcoholic,
       ),
@@ -264,8 +318,8 @@ export async function parseRecipeWithAi(input: {
   const client = getClient();
   if (!client) return fallback;
 
-  const imageUrls = (input.imageUrls || []).filter(Boolean).slice(0, 4);
-  const useVision = imageUrls.length > 0;
+  const visionUrls = await resolveImagesForVision(input.imageUrls || []);
+  const useVision = visionUrls.length > 0;
   const model = useVision
     ? process.env.DEEPSEEK_MODEL_VISION ||
       process.env.DEEPSEEK_MODEL ||
@@ -273,21 +327,24 @@ export async function parseRecipeWithAi(input: {
     : process.env.DEEPSEEK_MODEL || "deepseek-flash";
 
   const userText = [
-    "请解析以下随手记并生成配方 JSON：",
-    input.text || "（无文字，请尽量从图片推断酒名与杯型）",
-    imageUrls.length ? `已上传图片 ${imageUrls.length} 张（封面优先第一张）。` : "",
+    "请结合下方图片与文字，解析成配方 JSON：",
+    input.text?.trim()
+      ? `【手记文字】\n${input.text.trim()}`
+      : "（无文字，请尽量从图片推断酒名、杯型与配色气质）",
+    useVision
+      ? `【成片】已附 ${visionUrls.length} 张图（第一张为封面，请据此判断杯型与外观）。`
+      : "【成片】本轮无图。",
   ]
     .filter(Boolean)
-    .join("\n");
+    .join("\n\n");
 
   const content: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [
     { type: "text", text: userText },
+    ...visionUrls.map((url) => ({
+      type: "image_url" as const,
+      image_url: { url },
+    })),
   ];
-  if (useVision) {
-    for (const url of imageUrls) {
-      content.push({ type: "image_url", image_url: { url } });
-    }
-  }
 
   let draft = fallback;
   try {
@@ -300,14 +357,28 @@ export async function parseRecipeWithAi(input: {
           content: useVision ? content : userText,
         },
       ],
-      temperature: 0.4,
-      max_tokens: 1200,
+      temperature: 0.35,
+      max_tokens: 1400,
     });
     const text = completion.choices[0]?.message?.content?.trim();
     if (text) draft = normalizeDraft(extractJson(text), fallback);
   } catch {
     draft = fallback;
   }
+
+  // 兜底再算一遍酒精度
+  const abv = estimateAbv(draft.ingredients);
+  if (abv > 0 && (draft.taste.abvApprox == null || draft.taste.abvApprox <= 0)) {
+    draft = {
+      ...draft,
+      taste: {
+        ...draft.taste,
+        abvApprox: abv,
+        isNonAlcoholic: false,
+      },
+    };
+  }
+  draft = { ...draft, steps: ensureNumberedSteps(draft.steps) };
 
   try {
     const flavor = await generateFlavorText({
@@ -318,7 +389,7 @@ export async function parseRecipeWithAi(input: {
         .join("、"),
       steps: draft.steps,
       tasteHints: `甜度${draft.taste.sweetness} 酸度${draft.taste.acidity} 烈度${draft.taste.strength} 杯型${draft.taste.glassType}`,
-      imageUrls,
+      imageUrls: input.imageUrls,
     });
     draft = {
       ...draft,
@@ -333,6 +404,7 @@ export async function parseRecipeWithAi(input: {
 export async function chatRecipeWithAi(input: {
   draft: RecipeAiDraft;
   messages: ChatTurn[];
+  imageUrls?: string[];
 }): Promise<RecipeAiDraft> {
   const client = getClient();
   if (!client) {
@@ -346,22 +418,52 @@ export async function chatRecipeWithAi(input: {
     };
   }
 
+  const visionUrls = await resolveImagesForVision(input.imageUrls || []);
+  const useVision = visionUrls.length > 0;
+  const model = useVision
+    ? process.env.DEEPSEEK_MODEL_VISION ||
+      process.env.DEEPSEEK_MODEL ||
+      "deepseek-flash"
+    : process.env.DEEPSEEK_MODEL || "deepseek-flash";
+
+  const textBody = [
+    `当前草稿 JSON：\n${JSON.stringify(input.draft)}`,
+    useVision
+      ? `本轮已附成片 ${visionUrls.length} 张，请结合图片更新杯型/外观相关字段。`
+      : "本轮未附图片。",
+    `对话：\n${input.messages.map((m) => `${m.role}: ${m.content}`).join("\n")}`,
+    "请输出更新后的完整 JSON。",
+  ].join("\n\n");
+
+  const userContent: OpenAI.Chat.Completions.ChatCompletionContentPart[] | string =
+    useVision
+      ? [
+          { type: "text", text: textBody },
+          ...visionUrls.map((url) => ({
+            type: "image_url" as const,
+            image_url: { url },
+          })),
+        ]
+      : textBody;
+
   const completion = await client.chat.completions.create({
-    model: process.env.DEEPSEEK_MODEL || "deepseek-flash",
+    model,
     messages: [
       { role: "system", content: CHAT_SYSTEM },
-      {
-        role: "user",
-        content: `当前草稿 JSON：\n${JSON.stringify(input.draft)}\n\n对话：\n${input.messages
-          .map((m) => `${m.role}: ${m.content}`)
-          .join("\n")}\n\n请输出更新后的完整 JSON。`,
-      },
+      { role: "user", content: userContent },
     ],
-    temperature: 0.45,
-    max_tokens: 1200,
+    temperature: 0.4,
+    max_tokens: 1400,
   });
 
   const text = completion.choices[0]?.message?.content?.trim();
   if (!text) return input.draft;
-  return normalizeDraft(extractJson(text), input.draft);
+  const next = normalizeDraft(extractJson(text), input.draft);
+  const abv = estimateAbv(next.ingredients);
+  if (abv > 0 && (next.taste.abvApprox == null || next.taste.abvApprox <= 0)) {
+    next.taste.abvApprox = abv;
+    next.taste.isNonAlcoholic = false;
+  }
+  next.steps = ensureNumberedSteps(next.steps);
+  return next;
 }

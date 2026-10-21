@@ -17,7 +17,6 @@ export interface MenuDrink {
   isNonAlcoholic: boolean;
   hasDairy: boolean;
   hasCaffeine: boolean;
-  glassType: string;
   abvApprox: number | null;
 }
 
@@ -109,30 +108,27 @@ export function MenuClient({ drinks }: { drinks: MenuDrink[] }) {
                         {drink.isNonAlcoholic ? (
                           <span className="tag">无酒精</span>
                         ) : null}
-                        {drink.hasCaffeine ? (
-                          <span className="tag">含咖啡因</span>
-                        ) : null}
-                        {drink.hasDairy ? <span className="tag">含奶</span> : null}
-                        {drink.glassType ? (
-                          <span className="tag">{drink.glassType}</span>
-                        ) : null}
                         {!drink.isNonAlcoholic && drink.abvApprox != null ? (
                           <span className="tag">约 {drink.abvApprox}%</span>
                         ) : null}
+                        {drink.hasDairy ? <span className="tag">含奶</span> : null}
+                        {drink.hasCaffeine ? (
+                          <span className="tag">含咖啡因</span>
+                        ) : null}
                       </div>
-                      <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-ink-mute">
-                        {drink.flavorText || drink.tagline || ""}
-                      </p>
-                      <div className="mt-3 flex items-center justify-end">
+                      <div className="mt-1.5 flex items-end gap-2">
+                        <p className="min-w-0 flex-1 line-clamp-2 text-xs leading-5 text-ink-mute">
+                          {drink.flavorText || drink.tagline || ""}
+                        </p>
                         {drink.isAvailable ? (
                           <Link
                             href={`/drinks/${drink.id}`}
-                            className="rounded-sm bg-hush-pink px-3 py-1.5 text-xs text-[#1a0b22]"
+                            className="shrink-0 rounded-sm bg-hush-pink px-3 py-1.5 text-xs text-[#1a0b22]"
                           >
                             选规格
                           </Link>
                         ) : (
-                          <span className="rounded-sm bg-hush-plum px-3 py-1.5 text-xs text-ink-mute">
+                          <span className="shrink-0 rounded-sm bg-hush-plum px-3 py-1.5 text-xs text-ink-mute">
                             售罄
                           </span>
                         )}

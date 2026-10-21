@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { resolveImagesForVision } from "@/lib/ai-images";
 
 const FLAVOR_SYSTEM_PROMPT = `你是「HUSH」家庭调酒吧的文案师。根据内部配方信息和成片外观，写一段对外短风味介绍。
 
@@ -40,7 +41,7 @@ export async function generateFlavorText(input: {
     .filter(Boolean)
     .join("\n");
 
-  const images = (input.imageUrls || []).filter(Boolean).slice(0, 2);
+  const images = await resolveImagesForVision(input.imageUrls || [], 2);
   const useVision = images.length > 0;
   const model = useVision
     ? process.env.DEEPSEEK_MODEL_VISION ||

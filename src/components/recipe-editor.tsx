@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ImageCropUpload } from "@/components/image-crop-upload";
 import type { RecipeAiDraft, RecipeTasteDraft } from "@/lib/ai-recipe";
 import { DRINK_CATEGORIES } from "@/lib/categories";
+import { DEFAULT_GLASS_TYPE, GLASS_TYPES } from "@/lib/glasses";
 import type { Ingredient } from "@/lib/ingredients";
 
 interface RecipeForm {
@@ -32,7 +33,7 @@ const emptyTaste: RecipeTasteDraft = {
   acidity: 3,
   strength: 2,
   abvApprox: null,
-  glassType: "岩石杯",
+  glassType: DEFAULT_GLASS_TYPE,
   isNonAlcoholic: false,
   hasDairy: false,
   hasCaffeine: false,
@@ -194,6 +195,14 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
   }
 
   async function handleAiParse() {
+    if (!form.imageUrls.length) {
+      setError("请先上传成片，再粘贴手记后识别");
+      return;
+    }
+    if (!rawNote.trim()) {
+      setError("请粘贴手记文字后再识别");
+      return;
+    }
     setParsing(true);
     setError("");
     setMessage("");
@@ -233,7 +242,11 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
       const res = await fetch("/api/ai/recipe/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ draft, messages: nextMessages }),
+        body: JSON.stringify({
+          draft,
+          messages: nextMessages,
+          imageUrls: form.imageUrls,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "对话失败");
@@ -326,8 +339,8 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "上架失败");
-      setMessage(data.reused ? "已更新关联酒品" : "已上架为酒品");
-      router.push(`/admin/drinks/${data.drink.id}`);
+      setMessage(data.reused ? "已更新菜单酒品" : "已上架");
+      router.push("/admin/recipes");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "上架失败");
@@ -350,29 +363,38 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
     <div className="space-y-5">
       <section className="card-surface p-5 space-y-3">
         <h2 className="text-base font-medium">AI 识配方</h2>
-        <textarea
-          className="field min-h-[100px]"
-          value={rawNote}
-          onChange={(e) => setRawNote(e.target.value)}
-          placeholder={"2026.10.18初恋\n朗姆酒25ml …"}
-        />
-        <ImageCropUpload
-          urls={form.imageUrls}
-          onChange={(urls) =>
-            setForm((p) => ({
-              ...p,
-              imageUrls: urls,
-              imageUrl: urls[0] || "",
-            }))
-          }
-        />
+        <p className="text-xs text-ink-mute">
+          ① 上传成片 → ② 粘贴手记 → ③ 识别图片+文字
+        </p>
+        <div className="space-y-2">
+          <p className="text-sm text-ink-soft">① 上传成片</p>
+          <ImageCropUpload
+            urls={form.imageUrls}
+            onChange={(urls) =>
+              setForm((p) => ({
+                ...p,
+                imageUrls: urls,
+                imageUrl: urls[0] || "",
+              }))
+            }
+          />
+        </div>
+        <div className="space-y-2">
+          <p className="text-sm text-ink-soft">② 粘贴手记</p>
+          <textarea
+            className="field min-h-[100px]"
+            value={rawNote}
+            onChange={(e) => setRawNote(e.target.value)}
+            placeholder={"葡萄可乐嗨棒\n45ml威士忌\n可乐加满\n葡萄气泡水补充一层"}
+          />
+        </div>
         <button
           type="button"
           className="btn-primary"
           disabled={parsing}
           onClick={handleAiParse}
         >
-          {parsing ? "识别中…" : "AI 识别并填入"}
+          {parsing ? "识别中…" : "③ AI 识别图片+文字"}
         </button>
 
         {chat.length ? (
@@ -534,13 +556,23 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
             </label>
             <label className="block space-y-1 text-sm">
               <span>杯型</span>
-              <input
+              <select
                 className="field"
-                value={taste.glassType}
+                value={
+                  (GLASS_TYPES as readonly string[]).includes(taste.glassType)
+                    ? taste.glassType
+                    : DEFAULT_GLASS_TYPE
+                }
                 onChange={(e) =>
                   setTaste((t) => ({ ...t, glassType: e.target.value }))
                 }
-              />
+              >
+                {GLASS_TYPES.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
             </label>
             {(
               [
@@ -653,7 +685,7 @@ export function RecipeEditor({ recipeId }: { recipeId?: string }) {
             disabled={publishing}
             onClick={handlePublish}
           >
-            {publishing ? "上架中…" : "上架为酒品"}
+            {publishing ? "上架中…" : "上架到菜单"}
           </button>
           {recipeId ? (
             <button type="button" className="btn-ghost" onClick={handleDelete}>
