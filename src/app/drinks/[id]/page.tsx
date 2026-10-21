@@ -23,7 +23,7 @@ export default async function DrinkDetailPage({
 
   return (
     <main className="shell">
-      <div className="relative aspect-square border-b-[3px] border-hush-pink/40 bg-sand">
+      <div className="relative aspect-square bg-transparent">
         {drink.imageUrl ? (
           <Image
             src={drink.imageUrl}

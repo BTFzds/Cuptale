@@ -128,7 +128,7 @@ export default function MyOrdersPage() {
                   href={`/drinks/${item.drinkId}`}
                   className="flex items-center gap-3 px-4 py-3"
                 >
-                  <div className="relative h-12 w-12 shrink-0 overflow-hidden border-[2px] border-hush-pink/40 bg-sand">
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden bg-transparent">
                     {item.drinkImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img

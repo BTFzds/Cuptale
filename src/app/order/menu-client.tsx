@@ -49,7 +49,7 @@ function DrinkRow({ drink }: { drink: MenuDrink }) {
       }`}
     >
       <div className="flex gap-3">
-        <div className="relative h-[80px] w-[80px] shrink-0 overflow-hidden border-[2px] border-hush-pink/40 bg-sand">
+        <div className="relative h-[80px] w-[80px] shrink-0 overflow-hidden bg-transparent">
           {drink.imageUrl ? (
             <Image
               src={drink.imageUrl}
